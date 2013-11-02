@@ -14,6 +14,8 @@ You will need to download install the following software before you can compile 
   * *TortoiseSVN*: http://tortoisesvn.net/
   * *FlashDevelop*: http://www.flashdevelop.org/
 
+_NOTE_: TorAS is a standard ActionScript library and, as such, works well with Flex, Flash Builder, and Flash. Experienced developers can forego installing FlashDevelop if desired.
+
 = Step 2: Checkout TorAS Source Code =
 
 Create a folder in which the TorAS source code will be stored. Right-click on this folder and select "SVN Checkout..." from the context menu.
