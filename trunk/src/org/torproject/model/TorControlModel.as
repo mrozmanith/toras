@@ -2,8 +2,6 @@ package org.torproject.model {
 	
 	/**
 	 * Stores protocol lookup and other dynamic and static information for use with the Tor control socket connection.
-	 * 
-	 * @author Patrick Bay
 	 */
 	public class TorControlModel {
 		

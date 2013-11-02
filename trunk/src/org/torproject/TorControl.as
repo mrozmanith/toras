@@ -15,10 +15,6 @@ package org.torproject  {
 	
 	/**
 	 * Provides control and event handling services for core Tor services.
-	 * 
-	 * @author Patrick Bay
-	 * 
-	 * v1.1 
 	 */
 	public class TorControl extends EventDispatcher {
 		
@@ -27,7 +23,8 @@ package org.torproject  {
 		private static const defaultControlPort:int = 9151; //Default control port (usualy 9151)
 		private static const defaultSOCKSIP:String = "127.0.0.1"; //Default SOCKS IP (usually 127.0.0.1)
 		private static const defaultSOCKSPort:int = 1080; //Default SOCKS port (usualy 1080)
-		private var _controlIP:String = defaultControlIP; //Assign defaults
+		//Default assignments...
+		private var _controlIP:String = defaultControlIP; 
 		private var _controlPort:int = defaultControlPort;
 		private var _SOCKSIP:String = defaultSOCKSIP; 
 		private var _SOCKSPort:int = defaultSOCKSPort;
@@ -57,11 +54,21 @@ ClientOnly 1
 SOCKSListenAddress %socks_ip%:%socks_port%
 ]]></config>
 		private var _synchResponseBuffer:String = new String(); //Used to buffer multi-line messages
-		private var _asynchEventBuffer:String = new String(); //Used to buffer multi-line messages
+		private var _asynchEventBuffer:String = new String(); //Used to buffer multi-line asynchronous messages
 		private var _synchRawResponseBuffer:String = new String(); //Used to buffer multi-line messages in their raw state
-		private var _asynchRawEventBuffer:String = new String(); //Used to buffer multi-line messages in their raw state
+		private var _asynchRawEventBuffer:String = new String(); //Used to buffer multi-line asynchronous messages in their raw state
 		private var _enabledEvents:Array = new Array(); //Tracks which asynchronous Tor control events are enabled
 		
+		/**
+		 * Creates an instance of TorControl.
+		 * 
+		 * @param	controlIP The control IP of the running Tor process.
+		 * @param	controlPort The control port of the running Tor process.
+		 * @param	SOCKSIP The SOCKS5 IP of the running Tor proxy.
+		 * @param	SOCKSPort The SOCKS5 port of the running Tor proxy.
+		 * @param	controlPassHash The control hashed password required to access the Tor process control connection.
+		 * @param	connectDelay Delay, in seconds, to wait to attempt to connect to the Tor control socket (allows Tor process to be started).
+		 */
 		public function TorControl(controlIP:String = defaultControlIP, controlPort:int = defaultControlPort, 
 									SOCKSIP:String=defaultSOCKSIP, SOCKSPort:int=defaultSOCKSPort,
 									controlPassHash:String="", connectDelay:Number=1) {
@@ -73,6 +80,11 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 			this._connectDelay = connectDelay*1000;
 		}//constructor
 		
+		/**
+		 * Attempts to connect to the running Tor control process via pre-set (in constructor) socket settings.
+		 * 
+		 * @param	... args Used internally to apply a startup delay. Set to true to bypass any startup delay (connect immediately).
+		 */
 		public function connect(... args):void {
 			this.launchTorProcess();
 			if (this._socket == null) {
@@ -87,6 +99,11 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 			}//else
 		}//connect
 		
+		/**
+		 * Attempts to launch the Tor process (binary). TorControl can communicate with a properly
+		 * configured Tor process even if it didn't launch it. Developers can bypass this method altogether
+		 * if the Tor process will be started manually.
+		 */
 		private function launchTorProcess():void {
 			if (torProcess != null) {
 				return;
@@ -117,6 +134,12 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 			}//else
 		}//launchTorProcess
 		
+		/**
+		 * Generates the Tor config file from settings derived from various class properties (see near top of this class declaration).
+		 * 
+		 * @param	configFile The file to generate the config file to (output). This path should also be supplied to the Tor process
+		 * at startup, if using TorControl to launch the Tor process.
+		 */
 		private function generateConfigFile(configFile:File):void {
 			var stream:FileStream = new FileStream();
 			stream.open(configFile, FileMode.WRITE);
@@ -130,6 +153,11 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 			stream.close();
 		}//generateConfigFile
 		
+		/**
+		 * Handles STDOUT messages from the running Tor process. This ONLY works if TorControl is used to launch the Tor process.
+		 * 
+		 * @param	eventObj A ProgressEvent object.
+		 */
 		private function onStandardOutData(eventObj:ProgressEvent):void {
 			var stdoutMsg:String = torProcess.standardOutput.readMultiByte(torProcess.standardOutput.bytesAvailable, TorControlModel.charSetEncoding);
 			var event:TorControlEvent = new TorControlEvent(TorControlEvent.ONLOGMSG);
@@ -138,6 +166,12 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 			this.dispatchEvent(event);
 		}//onStandardOutData
 		
+		/**
+		 * Invoked when TorControl successfully connects to the (presumably) Tor control socket. Only after authentication
+		 * should the socket be assumed to be a proper Tor control socket.
+		 * 
+		 * @param	eventObj An Event object.
+		 */
 		private function onConnect(eventObj:Event):void {
 			trace ("TorControl.onConnect >> Connected to Tor control socket at " + this._controlIP + ":" + this._controlPort);
 			this._connected = true;
@@ -145,12 +179,26 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 			this.authenticate();
 		}//onConnect
 		
+		/**
+		 * Send the authentication message to the Tor control socket.
+		 */
 		private function authenticate():void {
 			this._authenticated = false;
 			this.sendRawControlMessage(TorControlModel.getControlMessage("authenticate"));
 		}//authenticate
 		
+		/**
+		 * Enable a Tor control event (sent from the running process).
+		 * 
+		 * @param	eventType The internal Tor event type to listen for in a TorControlEvent.ONEVENT event (eee note below for more information).
+		 * 
+		 * @see https://gitweb.torproject.org/torspec.git?a=blob_plain;hb=HEAD;f=control-spec.txt (Section "4.1. Asynchronous events)
+		 * 
+		 */
 		public function enableTorEvent(eventType:String):void {
+			if ((!this._connected) || (!this._authenticated)) {
+				return;
+			}//if
 			var torMessage:String = TorControlModel.getControlMessage("enableevent");
 			this.addUniqueAsyncEvent(eventType);
 			trace ("TorControl.enableTorEvent > " + eventType + " -- Active events: " + this.enabledAsyncEventList);

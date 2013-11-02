@@ -41,8 +41,10 @@ package  {
 		
 		private function onTorControlReady(eventObj:TorControlEvent):void {
 			trace ("Main.as > TorControl is connected, authenticated, and ready for commands.");
-			torControl.enableTorEvent("SIGNAL");
-			torControl.enableTorEvent("CIRC");
+			//Enable "CIRC" event notification, see document "TC: A Tor control protocol (Version 1) -- 4.1. Asynchronous events" for more information, here:
+			//   https://gitweb.torproject.org/torspec.git?a=blob_plain;hb=HEAD;f=control-spec.txt
+			//Event listener added to TorControl instance should listen for TorControlEvent.ONEVENT
+			torControl.enableTorEvent("CIRC"); 
 		}
 		
 	}
