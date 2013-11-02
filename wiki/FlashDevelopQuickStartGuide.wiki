@@ -5,7 +5,7 @@
 
 This page details how to set up the FlashDevelop IDE to compile the "full featured" version of TorAS, including the ability to launch and control the included Tor binary.
 
-If you're an experienced ActionScript developer you can skip directly to the final step to ensure that your application is being produced with the correct desktop profile.
+If you're an experienced ActionScript developer you can skip directly to the third step to ensure that your application is being produced with the correct desktop profile.
 
 = Step 1: Install Software =
 
