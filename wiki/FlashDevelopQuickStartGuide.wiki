@@ -1,0 +1,15 @@
+#summary This page describes how to set up the open source FlashDevelop IDE to compile TorAS.
+#labels FlashDevelop,TortoiseSVN,installation,introduction
+
+= Introduction =
+
+This page will describe how to set up the FlashDevelop IDE to compile the "full featured" version of TorAS, including the ability to launch and control the included Tor binary.
+
+If you're an experienced ActionScript developer you can skip directly to the final step to ensure that your application is being produced with the correct desktop profile.
+
+= Installation =
+
+You will need to download install the following software before you can compile TorAS:
+
+  * *TortoiseSVN*: http://tortoisesvn.net/
+  * *FlashDevelop*: http://www.flashdevelop.org/
