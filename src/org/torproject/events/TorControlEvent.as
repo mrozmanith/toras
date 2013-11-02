@@ -2,8 +2,7 @@ package org.torproject.events {
 	import flash.events.Event;
 	
 	/**
-	 * ...
-	 * @author Patrick Bay
+	 * Contains data and information from various events raised within a TorControl instance.
 	 */
 	public class TorControlEvent extends Event {
 		
@@ -28,19 +27,21 @@ package org.torproject.events {
 		/**
 		 * Dispatched whenever the Tor control connection signals an asynchronous event. Only registered events will be processed, and these may be received at any time. 
 		 * Refer to: "TC: A Tor control protocol (Version 1) -- 4.1. Asynchronous events"
-		 * The Tor event that triggered the event is stored in the torEvent property.
+		 * https://gitweb.torproject.org/torspec.git?a=blob_plain;hb=HEAD;f=control-spec.txt
+		 * 
+		 * The Tor event that triggered the event is stored in the torEvent property. Otherwise it is up to the listener to interpret the included message.
 		 */
 		public static const ONEVENT:String = "Event.TorControlEvent.ONEVENT";
 		
 		public var body:String = new String();
 		public var status:int = 0;		
 		public var rawMessage:String = new String();
-		public var torEvent:String = null; //Used only by ONEVENT
+		public var torEvent:String = null; //Used only by Event.TorControlEvent.ONEVENT
 		
 		public function TorControlEvent(p_type:String, p_bubbles:Boolean=false, p_cancelable:Boolean=false) {
 			super(p_type, p_bubbles, p_cancelable);
-		}
+		}//consructor
 		
-	}
+	}//TorControlEvent class
 
-}
+}//package
