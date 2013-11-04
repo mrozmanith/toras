@@ -1,4 +1,4 @@
-#summary Developer guide for TorAS developers.
+#summary TorAS Developer Guide
 #labels ActionScript,TorAS,DevelopersGuide,setup,configuration
 
 = Introduction =
