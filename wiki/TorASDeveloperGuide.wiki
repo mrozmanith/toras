@@ -81,10 +81,7 @@ To use non-standard port/IP settings, provide these to the constructor. For exaa
 
 If you're using the dynamic config option for the Tor services binary, the next step is to assign the config data to the "config" property of the instance:
 
-*toControl.config=<config>
-
+toControl.config=<config>
 ControlPort 9050
-
 ControlListenAddress 127.0.0.1
-
-...*
+...
