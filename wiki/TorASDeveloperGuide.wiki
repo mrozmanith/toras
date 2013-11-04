@@ -98,7 +98,9 @@ The one event that it is highly recommended that you listen to is "TorControlEve
 
 If you don't want TorControl to automatically launch the Tor services binary, set the "launchServices" property to _false_ at this point (default is _true_):
 
-{{{torControl.launchServices=false;}}}
+{{{
+torControl.launchServices=false;
+}}}
 
 The final step in establishing a connection to the running Tor control services is to call the "connect" method of the TorControl instance:
 
@@ -120,4 +122,5 @@ torControl.addEventListener(TorControlEvent.ONAUTHENTICATE, this.onTorReady);
 torControl.connect();
 function onTorReady(eventObj:TorControlEvent):void {
    trace ("Tor control connection is authenticated and ready.");
+}
 }}}
