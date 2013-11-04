@@ -1,4 +1,4 @@
-#summary A technical document decribing the Tor v1 Protocol
+#summary Tor v1 Protocol Specification
 #labels Tor,protocolspecification,document
 
 This document is provided here for quick reference purposes only. Please see the authoritative Tor Protocol Specification document for the most up-to-date and correct information: 
