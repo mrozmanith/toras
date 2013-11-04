@@ -64,3 +64,11 @@ It is perfectly valid to hardcode these configuration values as in the above, po
 Many additional starup configuration options are available for use with this configuration data. Please refer to the complete list at:
 
 https://www.torproject.org/docs/tor-manual-dev.html
+
+= Starting TorAS =
+
+As mentioned in a previous section, if you don't plan on using TorControl to launch the Tor services binary from within an AIR application, you will need to launch the Tor binary manually. Be sure to note imporant information such as the control IP, control port, SOCKS5 IP, SOCKS5 port, and control password hash -- these will need to be supplied to TorControl at instantiation.
+
+If you're using TorControl to launch the Tor services binary, ensure that you've created valid config data in the step above first. Take extra care to ensure that vital information such as IPs and ports match between TorControl and the Tor config (especially if using non-dynamic, non-metatag data).
+
+Starting Tor
