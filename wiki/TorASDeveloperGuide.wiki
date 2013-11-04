@@ -102,3 +102,15 @@ The final step in establishing a connection to the running Tor control services 
 If properly configured and enabled, this will automate the launch, configuration, and initial connection(s) of the Tor services binary.
 
 The benefit of using TorControl to launch the Tor services binary is that you will also be able to observe STDOUT messages -- the Tor binary version of the ActionScript "trace" commands. These messages can be received by listening to the "TorControlEvent.ONLOGMSG" event. If you are launching the Tor services binary manually, this event will never be dispatched.
+
+Putting all of this together, starting up TorControl using default values may look something like this:
+
+*import org.torproject.TorControl;*
+*import org.torproject.events.TorControlEvent;*
+*var torControl:TorControl=new TorControl();*
+*torControl.addEventListener(TorControlEvent.ONAUTHENTICATE, this.onTorReady);*
+*torControl.connect();*
+
+*function onTorReady(eventObj:TorControlEvent):void {*
+*   trace ("Tor control connection is authenticated and ready.");*
+*}*
