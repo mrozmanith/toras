@@ -1,4 +1,4 @@
-#summary This page describes how to set up the free, open source FlashDevelop IDE to compile TorAS.
+#summary TorAS Quickstart Guide for FlashDevelop Users
 #labels FlashDevelop,TortoiseSVN,installation,introduction
 
 = Introduction =
