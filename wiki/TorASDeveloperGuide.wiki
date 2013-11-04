@@ -3,7 +3,7 @@
 
 = Introduction =
 
-The TorAS source code attempts to be ad autonomous and behind-the-scenes as possible, reducing the dependence on the developer to create complex setups and connections using the Tor services.
+The TorAS source code attempts to be autonomous and unobtrusive, reducing the dependence on the developer to create complex setups and connections with the Tor services.
 
 For this reason, TorAS comes with a number of default settings and pre-configurations intended to start the services automatically. While this will probably be sufficient for most developers, at least initially, it's wortwhile to become familiar with the rudimentary operation of TorAS.
 
