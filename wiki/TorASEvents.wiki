@@ -1,4 +1,4 @@
-#summary Describes the various events broadcast and used by TorAS.
+#summary TorAS Events Reference
 #labels TorAS,ActionScript,events
 
 = Introduction =
