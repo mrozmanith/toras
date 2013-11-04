@@ -39,7 +39,7 @@ To supply TorControl with a custom configuration file, developers can assign thi
 
 = Configuration Metatags =
 
-The configuration data currently supports 5 metatags, or special strings, which are replaced by additional settings that are assigned to the TorControl instance. These include:
+The configuration data currently supports 5 metatags, or special strings, which are replaced by custom (or default) settings that are passed to the TorControl instance. These include:
 
 *%control_ip%* : The IP address used by the running Tor control services socket for control and status commands. This string will be replaced by the IP specified in the TorControl constructor (or the default control IP "127.0.0.1" if not customized). Although the name "localhost" may work here, it is advisable to use the direct IP instead.
 
