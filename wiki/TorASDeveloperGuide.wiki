@@ -65,7 +65,7 @@ Many additional starup configuration options are available for use with this con
 
 https://www.torproject.org/docs/tor-manual-dev.html
 
-= Starting TorAS =
+= Starting the TorAS Control Connection =
 
 As mentioned in a previous section, if you don't plan on using TorControl to launch the Tor services binary from within an AIR application, you will need to launch the Tor binary manually. Be sure to note imporant information such as the control IP, control port, SOCKS5 IP, SOCKS5 port, and control password hash -- these will need to be supplied to TorControl at instantiation.
 
@@ -81,7 +81,22 @@ To use non-standard port/IP settings, provide these to the constructor. For exaa
 
 If you're using the dynamic config option for the Tor services binary, the next step is to assign the config data to the "config" property of the instance:
 
-toControl.config=<config>
-ControlPort 9050
-ControlListenAddress 127.0.0.1
-...
+toControl.config=<config>ControlPort 9050 ...
+
+At this point, you can set up listeners to any of the optional TorAS events:
+
+http://code.google.com/p/toras/wiki/TorASEvents
+
+The one event that it is highly recommended that you listen to is "TorControlEvent.ONAUTHENTICATE". This event will be broadcast by TorAS once a connection has been established and authenticated (commands may not be issued until both conditions are true).
+
+If you don't want TorControl to automatically launch the Tor services binary, set the "launchServices" property to _false_ at this point (default is _true_):
+
+torControl.launchServices=false;
+
+The final step in establishing a connection to the running Tor control services is to call the "connect" method of the TorControl instance:
+
+torControl.connect();
+
+If properly configured and enabled, this will automate the launch, configuration, and initial connection(s) of the Tor services binary.
+
+The benefit of using TorControl to launch the Tor services binary is that you will also be able to observe STDOUT messages -- the Tor binary version of the ActionScript "trace" commands. These messages can be received by listening to the "TorControlEvent.ONLOGMSG" event. If you are launching the Tor services binary manually, this event will never be dispatched.
