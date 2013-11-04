@@ -60,3 +60,7 @@ ClientOnly 1
 SOCKSListenAddress 127.0.0.1:1080_
 
 It is perfectly valid to hardcode these configuration values as in the above, post-metatag-parse data. However, it is adviseable to keep configuration data dynamic and instead use TorControl instantiation parameters for easier future updates and maintainability.
+
+Many additional starup configuration options are available for use with this configuration data. Please refer to the complete list at:
+
+https://www.torproject.org/docs/tor-manual-dev.html
