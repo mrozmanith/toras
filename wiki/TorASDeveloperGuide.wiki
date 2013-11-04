@@ -71,4 +71,20 @@ As mentioned in a previous section, if you don't plan on using TorControl to lau
 
 If you're using TorControl to launch the Tor services binary, ensure that you've created valid config data in the step above first. Take extra care to ensure that vital information such as IPs and ports match between TorControl and the Tor config (especially if using non-dynamic, non-metatag data).
 
-Starting Tor
+Starting TorControl is a simple process. First you need to create the TorControl instance:
+
+*var torControl:TorControl=new TorControl();*
+
+To use non-standard port/IP settings, provide these to the constructor. For exaample, if you're using the control address 127.0.0.1:9050 and the SOCKS5 address 127.0.0.1:8050, you would create the TorControl instance like this:
+
+*var torControl:TorControl=new TorControl("127.0.0.1", 9050, "127.0.0.1", 8050);*
+
+If you're using the dynamic config option for the Tor services binary, the next step is to assign the config data to the "config" property of the instance:
+
+*toControl.config=<config>
+
+ControlPort 9050
+
+ControlListenAddress 127.0.0.1
+
+...*
