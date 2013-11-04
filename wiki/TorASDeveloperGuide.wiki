@@ -106,11 +106,18 @@ The benefit of using TorControl to launch the Tor services binary is that you wi
 Putting all of this together, starting up TorControl using default values may look something like this:
 
 *import org.torproject.TorControl;*
+
 *import org.torproject.events.TorControlEvent;*
+
 *var torControl:TorControl=new TorControl();*
+
 *torControl.addEventListener(TorControlEvent.ONAUTHENTICATE, this.onTorReady);*
+
 *torControl.connect();*
 
+
 *function onTorReady(eventObj:TorControlEvent):void {*
+
 *   trace ("Tor control connection is authenticated and ready.");*
+
 *}*
