@@ -1,4 +1,4 @@
-#summary FlashDevelop IDE
+#summary About: FlashDevelop IDE
 #labels FlashDevelop,Haxe,ActionScript,Flash,AIR,Adobe,JavaScript,PHP,HTML,SWF,AIR
 
 = Introduction =
