@@ -17,7 +17,7 @@ http://code.google.com/p/toras/wiki/TorProtocolSpecification_v1
 
 The TorControl class is responsible for getting the Tor services binary up and running. If you plan to start the Tor binary manually, or if it's already running, you can skip this section entirely.
 
-TorControl configures the Tor services binary by dynamically creating a configuration file (torcc), writing it to the default application storage directory (File.applicationStorageDirectory), and then instructing Tor to load it as part of startup ("tor.exe -f /AppStorageDirectory/torcc").
+TorControl configures the Tor services binary by dynamically creating a configuration file (torcc), writing it to the default application storage directory (File.applicationStorageDirectory), and then instructing Tor to load it as part of startup ("_tor.exe -f /AppStorageDirectory/torcc_").
 
 The default contents of this file are stored in the TorControl class in the configData property:
 
@@ -30,7 +30,7 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 ]]></config>
 }}}
 
-Because this data is stored as XML, it is required to be stored within at least one top-level parent node. Although the name "config" is used for this node, any value XML node name is acceptable since it's only the contents of this node that are used.
+Because this data is stored as XML, it is required to be stored within at least one top-level parent node. Although the name "config" is used for this node, any valid XML node name is acceptable since it's only the contents of this node that are used.
 
 To supply TorControl with a custom configuration file, developers can assign this XML data, in the same format as specified, to the TorControl instance's "config" property, at any time prior to calling "connect".
 
