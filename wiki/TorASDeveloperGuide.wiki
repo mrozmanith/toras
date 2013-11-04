@@ -1,0 +1,21 @@
+#summary Developer guide for TorAS developers.
+#labels ActionScript,TorAS,DevelopersGuide,setup,configuration
+
+= Introduction =
+
+The TorAS source code attempts to be ad autonomous and behind-the-scenes as possible, reducing the dependence on the developer to create complex setups and connections using the Tor services.
+
+For this reason, TorAS comes with a number of default settings and pre-configurations intended to start the services automatically. While this will probably be sufficient for most developers, at least initially, it's wortwhile to become familiar with the rudimentary operation of TorAS.
+
+It is assumed that developers using TorAS have some knowledge with ActionScript (creating class instances, calling methods, working with data, etc.)
+
+Additionally, while TorAS provides a simplified way to access the Tor services, developers should refer to the Tor Protocol Specification for a complete and authoritative source of information:
+
+http://code.google.com/p/toras/wiki/TorProtocolSpecification_v1
+
+= Configuration =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
