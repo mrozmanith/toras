@@ -15,7 +15,7 @@ http://code.google.com/p/toras/wiki/TorProtocolSpecification_v1
 
 = Configuration =
 
-The TorControl class is responsible for getting the Tor services binary up and running. If you plan to start the Tor binary manually, or if it's already running, you can skip this section entirely.
+The TorControl class is responsible for connecting to and control a running Tor control connection, and optionally for getting the Tor services binary up and running (which starts a Tor control connection). If you plan to start the Tor binary manually, or if it's already running, you can skip this section entirely.
 
 TorControl configures the Tor services binary by dynamically creating a configuration file (torcc), writing it to the default application storage directory (File.applicationStorageDirectory), and then instructing Tor to load it as part of startup ("_tor.exe -f /AppStorageDirectory/torcc_").
 
