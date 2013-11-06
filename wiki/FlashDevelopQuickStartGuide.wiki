@@ -7,14 +7,14 @@ This page details how to set up the FlashDevelop IDE to compile the "full featur
 
 If you're an experienced ActionScript developer you can skip directly to the third step to ensure that your application is being produced with the correct desktop profile.
 
+Additionally, if you're an experienced developer who prefers tools such as Adobe Flash Builder, you should consider this entire document entirely optional -- you should be able to use the source code directly; simply copy it from the "src" folder.
+
 = Step 1: Install Software =
 
 You will need to download install the following software before you can compile TorAS:
 
   * *TortoiseSVN*: http://tortoisesvn.net/
   * *FlashDevelop*: http://www.flashdevelop.org/
-
-_NOTE_: TorAS is a standard ActionScript library and, as such, works well with Flex, Flash Builder, and Flash. Experienced developers can forego installing FlashDevelop if desired.
 
 = Step 2: Checkout TorAS Source Code =
 
