@@ -35,6 +35,7 @@ package org.torproject.model {
 		public static const TorControlTable:XML =
 		<TorControlTable>
 			<message type="authenticate">AUTHENTICATE</message>
+			<message type="shutdown">SIGNAL SHUTDOWN</message>
 			<message type="enableevent">SETEVENTS EXTENDED %event_list%</message>
 		</TorControlTable>
 		
