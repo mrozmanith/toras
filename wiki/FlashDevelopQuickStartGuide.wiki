@@ -34,6 +34,7 @@ This final step is required to be able to compile and run the "full" version of 
   * In the ActionScript 3 selection area, select "AIR AS3 Projector"
   * Give the project any name you like (TorAS is recommended).
   * For the Location, browse to the main folder into which TorAS was checked out in Step 2 (do not select the "src" or "bin" folders). Click OK.
+  * FlashDevelop will warn you that the directory to which you will be copying template files is not empty. This is not a problem so click OK.
   * From the main menu, select Project -> AIR App Properties...
   * Select the "Installation" tab, and ensure that the "Extended Desktop" profile is selected (checked). Click OK.
   * In the Project pane (View -> Project Manager), open the "src" folder and ensure that the "Main" class is selected as the document class. To do this, right-click on the class and ensure "Document Class" is checked.
