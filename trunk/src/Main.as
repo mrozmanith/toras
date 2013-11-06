@@ -48,7 +48,7 @@ package  {
 				//We want to listen to .ONAUTHENTICATE since .ONCONNECT only signals that a connection has been established.
 				torControl.addEventListener(TorControlEvent.ONAUTHENTICATE, this.onTorControlReady);
 				torControl.addEventListener(TorControlEvent.ONLOGMSG, this.onTorLogMessage);
-				torControl.addEventListener(TorControlEvent.ONEVENT, this.onTorEvent);
+			//	torControl.addEventListener(TorControlEvent.ONEVENT, this.onTorEvent);
 				torControl.connect();
 			}//if
 		}
