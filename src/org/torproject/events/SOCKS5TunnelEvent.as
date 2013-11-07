@@ -1,6 +1,8 @@
 package org.torproject.events {
 	
 	import flash.events.Event;
+	import org.torproject.model.HTTPResponseHeader;
+	import flash.utils.ByteArray;
 	
 	/**
 	 * Contains data and information from various events raised within a SOCKS5Tunnel instance.
@@ -36,12 +38,17 @@ package org.torproject.events {
 		 */
 		public static const ONCONNECT:String = "Event.SOCKS5TunnelEvent.ONCONNECT";
 		/**
+		 * Dispatched when the SOCKS5Tunnel instance disconnects from the tunnel socket.
+		 */
+		public static const ONDISCONNECT:String = "Event.SOCKS5TunnelEvent.ONDISCONNECT";
+		/**
 		 * Dispatched when the SOCKS5Tunnel instance received a complete response to a tunneled HTTP request.
 		 */
 		public static const ONHTTPRESPONSE:String = "Event.SOCKS5TunnelEvent.ONHTTPRESPONSE";
 		
-		public var HTTPResponseBody:String = null;
-		public var HTTPResponseHeaders:String = null;
+		public var responseBody:String = null;
+		public var responseData:ByteArray = null;
+		public var responseHeaders:Vector.<HTTPResponseHeader> = null;
 		
 		public function SOCKS5TunnelEvent(p_type:String, p_bubbles:Boolean=false, p_cancelable:Boolean=false) {
 			super(p_type, p_bubbles, p_cancelable);
