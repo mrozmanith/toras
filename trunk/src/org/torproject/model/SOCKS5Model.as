@@ -40,8 +40,7 @@ package org.torproject.model {
 		public static const HTTP_request_prefix:String = "HTTP";
 		public static const HTTP_version:String = "1.1";
 		public static const lineEnd:String = String.fromCharCode(13) + String.fromCharCode(10);
-		public static const doubleLineEnd:String = lineEnd+lineEnd;
-		public static const commEnd:int = 0; //Byte
+		public static const doubleLineEnd:String = lineEnd+lineEnd;		
 		
 		//SOCKS5 version header (maybe support 4 some day?)
 		public static const SOCKS5_head_VERSION:int = 5;

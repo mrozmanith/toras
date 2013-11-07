@@ -16,6 +16,7 @@ package org.torproject {
 	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
 	import org.torproject.utils.URLUtil;
+	import org.torproject.model.HTTPResponseHeader;
 	import org.torproject.TorControl;	
 	
 	/**
@@ -127,25 +128,37 @@ package org.torproject {
 			this._connectionType = SOCKS5Model.SOCKS5_conn_TCPIPSTREAM;
 			this._tunnelSocket = new Socket(this.tunnelIP, this.tunnelPort);
 			this._tunnelSocket.addEventListener(Event.CONNECT, this.onTunnelConnect);
+			this._tunnelSocket.addEventListener(Event.CLOSE, this.onTunnelDisconnect);
 			return (true);
 		}//loadHTTP			
 		
 		private function onTunnelConnect(eventObj:Event):void {			
 			trace ("SOCKS5Tunnel connected to \"" + this.tunnelIP + "\" on port " + this.tunnelPort);
 			this._connected = true;
-			this._tunnelSocket.removeEventListener(Event.CONNECT, this.onTunnelConnect);
+			this._tunnelSocket.removeEventListener(Event.CONNECT, this.onTunnelConnect);			
 			this._tunnelSocket.addEventListener(ProgressEvent.SOCKET_DATA, this.onTunnelData);
 			var connectEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONCONNECT);
 			this.dispatchEvent(connectEvent);
 			this.authenticateTunnel();
 		}//onTunnelData	
 		
-		private function authenticateTunnel():void {
-			trace ("authenticateTunnel...");			
+		private function onTunnelDisconnect(eventObj:Event):void {			
+			trace ("SOCKS5Tunnel disconnected from \"" + this.tunnelIP + "\" on port " + this.tunnelPort);
+			this._connected = false;
+			this._authenticated = false;
+			this._tunneled = false;
+			this._tunnelSocket.removeEventListener(Event.CONNECT, this.onTunnelConnect);
+			this._tunnelSocket.removeEventListener(Event.CLOSE, this.onTunnelDisconnect);
+			this._tunnelSocket.addEventListener(ProgressEvent.SOCKET_DATA, this.onTunnelData);
+			var connectEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONDISCONNECT);
+			this.dispatchEvent(connectEvent);			
+		}//onTunnelData	
+		
+		
+		private function authenticateTunnel():void {			
 			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_head_VERSION);
 			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_auth_NUMMETHODS);
-			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_auth_NOAUTH);
-			//Note that SOCKS5Model.commEnd is only used to complete the HTTP request -- this is a fixed-size request			
+			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_auth_NOAUTH);			
 			this._tunnelSocket.flush();
 		}//authenticateTunnel
 		
@@ -157,12 +170,13 @@ package org.torproject {
 			var currentRequest:URLRequest = this._urlRequestBuffer[0] as URLRequest;
 			var domain:String = URLUtil.getServerName(currentRequest.url);
 			var domainLength:int = int(domain.length);
-			var port:int = int(URLUtil.getPort(currentRequest.url));
+			var port:int = int(URLUtil.getPort(currentRequest.url));			
 			this._tunnelSocket.writeByte(domainLength);
-			this._tunnelSocket.writeMultiByte(domain, SOCKS5Model.charSetEncoding);
-			this._tunnelSocket.writeByte(0); //We should split the port on the byte boundary so that we can support all ports!
-			this._tunnelSocket.writeByte(port);
-			//Note that SOCKS5Model.commEnd is only used to complete the HTTP request -- this is a fixed-size request
+			var portMSB:int = (port & 0xFF00) >> 8;
+			var portLSB:int = port & 0xFF;			
+			this._tunnelSocket.writeMultiByte(domain, SOCKS5Model.charSetEncoding);			
+			this._tunnelSocket.writeByte(portMSB); //Obviously swap these if LSB comes first
+			this._tunnelSocket.writeByte(portLSB);			
 			this._tunnelSocket.flush();
 		}//onAuthenticateTunnel
 		
@@ -228,8 +242,8 @@ field 6: network byte order port number, 2 bytes
 		}//tunnelResponseOkay
 		
 		private function tunnelRequestComplete(respData:ByteArray):Boolean {
-			respData.position = respData.length - 4;
-			var respString:String = respData.readMultiByte(respData.length, SOCKS5Model.charSetEncoding);
+			respData.position = respData.bytesAvailable - 4;
+			var respString:String = respData.readMultiByte(4, SOCKS5Model.charSetEncoding);						
 			respData.position = 0;
 			if (respString == SOCKS5Model.doubleLineEnd) {
 				return (true);
@@ -257,25 +271,23 @@ field 6: network byte order port number, 2 bytes
 					this.sendQueuedHTTPRequest();
 					return;
 				}//if
-			}//if		
-			//this._responseBuffer
-			if (!this.tunnelRequestComplete(rawData)) {
-				rawData.position = 0;
-				this._responseBuffer.writeBytes(rawData, 0);
+			}//if					
+			if (!this.tunnelRequestComplete(rawData)) {				
+				rawData.readBytes(this._responseBuffer, this._responseBuffer.length);				
 				return;
 			}//if
-			rawData = this._responseBuffer;			
-			rawData.position = 0;
-			stringData = rawData.readMultiByte(rawData.length, SOCKS5Model.charSetEncoding);
-			rawData.position = 0;			
-			var dataEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONHTTPRESPONSE);	
-			trace ("Got HTTP response");
-			trace (stringData);
-			this.dispatchEvent(dataEvent);
+			rawData.readBytes(this._responseBuffer, this._responseBuffer.length);				
+			this._responseBuffer.position = 0;
+			stringData = this._responseBuffer.readMultiByte(this._responseBuffer.length, SOCKS5Model.charSetEncoding);
+			this._responseBuffer.position = 0;
+			var dataEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONHTTPRESPONSE);			
+			dataEvent.responseBody = stringData;
+			dataEvent.responseData = new ByteArray();
+			dataEvent.responseData.readBytes(this._responseBuffer);
+			dataEvent.responseHeaders = new Vector.<HTTPResponseHeader>();
+			this.dispatchEvent(dataEvent);			
 		}//onTunnelData
 		
-		
-			
 	}//SOCKS5Tunnel class
 
 }//package
