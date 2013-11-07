@@ -1,7 +1,7 @@
 package org.torproject.events {
 	
 	import flash.events.Event;
-	import org.torproject.model.HTTPResponseHeader;
+	import org.torproject.model.HTTPResponse;
 	import flash.utils.ByteArray;
 	
 	/**
@@ -43,12 +43,21 @@ package org.torproject.events {
 		public static const ONDISCONNECT:String = "Event.SOCKS5TunnelEvent.ONDISCONNECT";
 		/**
 		 * Dispatched when the SOCKS5Tunnel instance received a complete response to a tunneled HTTP request.
+		 * In a typical response, status would be parsed first, followed by headers, and finally by this event.
 		 */
 		public static const ONHTTPRESPONSE:String = "Event.SOCKS5TunnelEvent.ONHTTPRESPONSE";
+		/**
+		 * Dispatched when the SOCKS5Tunnel instance receives enough information to parse HTTP headers from a response.
+		 * In a typical response, status would be parsed first, followed by headers, and finally by the ONHTTPRESPONSE event.
+		 */
+		public static const ONHTTPHEADERS:String = "Event.SOCKS5TunnelEvent.ONHTTPHEADERS";
+		/**
+		 * Dispatched when the SOCKS5Tunnel instance receives enough information to parse HTTP status information from a response.
+		 * In a typical response, headers would be parsed next, followed by the ONHTTPRESPONSE event.
+		 */
+		public static const ONHTTPSTATUS:String = "Event.SOCKS5TunnelEvent.ONHTTPSTATUS";
 		
-		public var responseBody:String = null;
-		public var responseData:ByteArray = null;
-		public var responseHeaders:Vector.<HTTPResponseHeader> = null;
+		public var httpResponse:HTTPResponse = null;	
 		
 		public function SOCKS5TunnelEvent(p_type:String, p_bubbles:Boolean=false, p_cancelable:Boolean=false) {
 			super(p_type, p_bubbles, p_cancelable);
