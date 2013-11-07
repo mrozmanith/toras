@@ -40,6 +40,10 @@ package org.torproject.events {
 		 */
 		public static const ONCONNECT:String = "Event.TorControlEvent.ONCONNECT";
 		/**
+		 * Dispatched when the Tor control connection reports an error when connecting.
+		 */
+		public static const ONCONNECTERROR:String = "Event.TorControlEvent.ONCONNECTERROR";
+		/**
 		 * Dispatched once the Tor control connection is authenticated and ready to accept commands.
 		 */
 		public static const ONAUTHENTICATE:String = "Event.TorControlEvent.ONAUTHENTICATE";
@@ -47,15 +51,7 @@ package org.torproject.events {
 		 * Dispatched whenever the Tor control connection replies with a synchronous response. For asynchronous events registered with Tor, additional ASYNCHEVENT events
 		 * will be broadcast.
 		 */
-		public static const ONRESPONSE:String = "Event.TorControlEvent.ONRESPONSE";
-		/**
-		 * Dispatched whenever the Tor control connection signals an asynchronous event. Only registered events will be processed, and these may be received at any time. 
-		 * Refer to: "TC: A Tor control protocol (Version 1) -- 4.1. Asynchronous events"
-		 * https://gitweb.torproject.org/torspec.git?a=blob_plain;hb=HEAD;f=control-spec.txt
-		 * 
-		 * The Tor event that triggered the event is stored in the torEvent property. Otherwise it is up to the listener to interpret the included message.
-		 */
-		public static const ONEVENT:String = "Event.TorControlEvent.ONEVENT";
+		public static const ONRESPONSE:String = "Event.TorControlEvent.ONRESPONSE";		
 		/**
 		 * The following events refer to to: "TC: A Tor control protocol (Version 1) -- 4.1. Asynchronous events"
 		 * https://gitweb.torproject.org/torspec.git?a=blob_plain;hb=HEAD;f=control-spec.txt
@@ -93,7 +89,7 @@ package org.torproject.events {
 		/**
 		 * Dispatched whenever the Tor control connection signals an asynchronous "ORCONN" event. [NOT YET IMPLEMENTED]
 		 */
-		public static const TOR_ORCONN:String = "Event.TorControlEvent.ONEVENT.TOR_ORCONN";		
+		public static const TOR_ORCONN:String = "Event.TorControlEvent.ONEVENT.TOR_ORCONN";			
 		/**
 		 * Dispatched whenever the Tor control connection signals an asynchronous "BW" event. [NOT YET IMPLEMENTED]
 		 */
@@ -126,6 +122,71 @@ package org.torproject.events {
 		public function TorControlEvent(p_type:String, p_bubbles:Boolean=false, p_cancelable:Boolean=false) {
 			super(p_type, p_bubbles, p_cancelable);
 		}//consructor
+		
+		/**
+		 * Returns the Tor event shortcode for the provided long TorControlEvent event constant.
+		 * For example, the constant TorControlEvent.TOR_DEBUG returns "DEBUG".
+		 * 
+		 * @param	torEvent A TorControlEvent event constant string.
+		 * 
+		 * @return The Tor shortcode that matches the supplied parameter, or null if no such code exists.
+		 */
+		public static function getTorEventShortcode(torEvent:String):String {
+			//In the future, this may be safer to do as a lookup from within TorControlModel
+			var eventSplit:Array = torEvent.split(".");
+			var torEventString:String = eventSplit[eventSplit.length - 1] as String;
+			var torEventSplit:Array = torEventString.split("_");
+			var eventPrefix:String = torEventSplit[0] as String;
+			if (eventPrefix != "TOR") {
+				return (null);
+			}//if
+			var shortCode:String = torEventString.substr(4); //After "TOR_"
+			return (shortCode);
+		}//getTorEventShortcode
+		
+		/**
+		 * Returns the Tor event longcode for the provided short Tor code. This is used to map Tor events to TorControlEvent
+		 * constants.
+		 * 
+		 * For example, the Tor event "DEBUG" is mapped to the TorControlEvent.TOR_DEBUG constant string.
+		 * 
+		 * @param	torEvent A Tor shortcode event string.
+		 * 
+		 * @return A TorControlEvent constant event string, or null if no matching string exists.
+		 */
+		public static function getTorEventLongcode(torEvent:String):String {
+			if ((torEvent == null) || (torEvent == "")) {
+				return (null);
+			}//if
+			try {
+				var longCodeString:String = "TOR_" + torEvent;				
+				var longCode:String = TorControlEvent[longCodeString];				
+				return (longCode);
+			} catch (err:*) {
+				return (null);
+			}//catch
+			return (null);
+		}//getTorEventLongcode
+		
+		/**
+		 * Checks if supplied TorControlEvent constant is an asynchronous Tor control connection event
+		 * or a standard Flash event.
+		 * 
+		 * @param	torEvent A TorControlEvent event constant string.
+		 * 
+		 * @return True if the supplied event constant appears to be a Tor control connection event, false otherwise.
+		 */
+		public static function isTorEvent(torEvent:String):Boolean {
+			//In the future, this may be safer to do as a lookup from within TorControlModel
+			var eventSplit:Array = torEvent.split(".");
+			var torEventString:String = eventSplit[eventSplit.length - 1] as String;
+			var torEventSplit:Array = torEventString.split("_");
+			var eventPrefix:String = torEventSplit[0] as String;
+			if (eventPrefix == "TOR") {
+				return (true);
+			}//if
+			return (false);
+		}//isTorEvent
 		
 	}//TorControlEvent class
 

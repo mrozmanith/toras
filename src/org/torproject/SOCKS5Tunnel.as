@@ -1,20 +1,281 @@
 package org.torproject {
 	
+	import air.net.SocketMonitor;
+	import flash.events.EventDispatcher;
 	import flash.net.Socket;
 	import flash.events.Event;
 	import flash.events.ProgressEvent;
+	import flash.events.IOErrorEvent;	
+	import flash.events.SecurityErrorEvent;
+	import flash.utils.ByteArray;
+	import org.torproject.events.SOCKS5TunnelEvent;
+	import org.torproject.model.SOCKS5Model;
+	import flash.net.URLRequest;
+	import flash.net.URLRequestDefaults;
+	import flash.net.URLRequestHeader;
+	import flash.net.URLRequestMethod;
+	import flash.net.URLVariables;
+	import org.torproject.utils.URLUtil;
+	import org.torproject.TorControl;	
 	
 	/**
-	 * Provides SOCKS5-capable transport services for proxied network requests.
+	 * Provides SOCKS5-capable transport services for proxied network requests. This protocol is also used by Tor to transport
+	 * various network requests.
+	 * 
+	 * Since TorControl is used to manage the Tor services process, if this process is already correctly configured and running
+	 * SOCKS5Tunnel can be used completely independently (TorControl may be entirely omitted).
 	 * 
 	 * @author Patrick Bay
 	 */
-	public class SOCKS5Tunnel {
+	public class SOCKS5Tunnel extends EventDispatcher {
 		
-		public function SOCKS5Tunnel() {
+		private var _tunnelSocket:Socket = null;
+		private var _tunnelIP:String = null;
+		private var _tunnelPort:int = -1;
+		private var _connectionType:int = -1;
+		private var _connected:Boolean = false;
+		private var _authenticated:Boolean = false;
+		private var _tunneled:Boolean = false;		
+		private var _requestActive:Boolean = false;
+		private var _urlRequestBuffer:Vector.<URLRequest> = new Vector.<URLRequest>();
+		private var _responseBuffer:ByteArray = new ByteArray();
+		
+		/**
+		 * Creates an instance of a SOCKS5 proxy tunnel.
+		 * 
+		 * @param	tunnelIP The SOCKS proxy IP to use. If not specified, the current settings in TorControl are used by default.
+		 * @param	tunnelPort The SOCKS proxy port to use. If not specified, the current settings in TorControl are used by default.
+		 */
+		public function SOCKS5Tunnel(tunnelIP:String=null, tunnelPort:int=-1) {
+			if ((tunnelIP == null) || (tunnelIP == "")) {
+				this._tunnelIP = TorControl.SOCKSIP;
+			}//if
+			if (tunnelPort < 1) {
+				this._tunnelPort = TorControl.SOCKSPort;
+			}//if
+		}//constructor
+		
+		/**
+		 * The current SOCKS proxy tunnel IP being used by the instance.
+		 */
+		public function get tunnelIP():String {
+			return (this._tunnelIP);
+		}//get tunnelIP
+		
+		/**
+		 * The current SOCKS proxy tunnel port being used by the instance.
+		 */
+		public function get tunnelPort():int {
+			return (this._tunnelPort);
+		}//get tunnelPort
+		
+		/**
+		 * The tunnel connection type being managed by this instance.
+		 */
+		public function get connectionType():int {
+			return (this._connectionType);
+		}//get connectionType
+		
+		/**
+		 * The status of the tunnel connection (true=connected, false=not connected). Requests
+		 * cannot be sent through the proxy unless it is both connected and tunneled.
+		 */
+		public function get connected():Boolean {
+			return (this._connected);
+		}//get connected
+		
+		/**
+		 * The status of the proxy tunnel (true=ready, false=not ready). Requests
+		 * cannot be sent through the proxy unless it is both connected and tunneled.
+		 */
+		public function get tunneled():Boolean {
+			return (this._tunneled);
+		}//get tunneled
+		
+		/**
+		 * Attempts to connect to the SOCKS tunnel connection using the settings supplied to the instance.
+		 * 
+		 * @param connType The type of connection to open for this tunnel proxy connection (defaults to 1 - TCP/IP stream). See SOCKS5Model.SOCKS5_conn_* properties
+		 * for valid values.
+		 */
+		public function connect(connType:int = 1):void {
 			
+		}//connect
+		
+		/**
+		 * Sends a HTTP request through the socks proxy, sending any included information (such as form data) in the process. Additional
+		 * requests via this tunnel connection will be disallowed until this one has completed (since replies may be multi-part).
+		 * 
+		 * @param request The URLRequest object holding the necessary information for the request.
+		 * 
+		 * @return True if the request was dispatched successfully, false otherwise.
+		 */
+		public function loadHTTP(request:URLRequest):Boolean {
+			if (request == null) {
+				return (false);
+			}//if
+			this._urlRequestBuffer.push(request);
+			this._responseBuffer = new ByteArray();
+			this._connected = false;
+			this._authenticated = false;
+			this._tunneled = false;			
+			if (this._tunnelSocket != null) {
+				this._tunnelSocket.removeEventListener(ProgressEvent.SOCKET_DATA, this.onTunnelData);
+				this._tunnelSocket.close();
+				this._tunnelSocket = null;
+			}//if
+			this._connectionType = SOCKS5Model.SOCKS5_conn_TCPIPSTREAM;
+			this._tunnelSocket = new Socket(this.tunnelIP, this.tunnelPort);
+			this._tunnelSocket.addEventListener(Event.CONNECT, this.onTunnelConnect);
+			return (true);
+		}//loadHTTP			
+		
+		private function onTunnelConnect(eventObj:Event):void {			
+			trace ("SOCKS5Tunnel connected to \"" + this.tunnelIP + "\" on port " + this.tunnelPort);
+			this._connected = true;
+			this._tunnelSocket.removeEventListener(Event.CONNECT, this.onTunnelConnect);
+			this._tunnelSocket.addEventListener(ProgressEvent.SOCKET_DATA, this.onTunnelData);
+			var connectEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONCONNECT);
+			this.dispatchEvent(connectEvent);
+			this.authenticateTunnel();
+		}//onTunnelData	
+		
+		private function authenticateTunnel():void {
+			trace ("authenticateTunnel...");			
+			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_head_VERSION);
+			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_auth_NUMMETHODS);
+			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_auth_NOAUTH);
+			//Note that SOCKS5Model.commEnd is only used to complete the HTTP request -- this is a fixed-size request			
+			this._tunnelSocket.flush();
+		}//authenticateTunnel
+		
+		private function onAuthenticateTunnel():void {			
+			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_head_VERSION);
+			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_conn_TCPIPSTREAM);
+			this._tunnelSocket.writeByte(0); //Reserved
+			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_addr_DOMAIN); //Most secure when using DNS through proxy
+			var currentRequest:URLRequest = this._urlRequestBuffer[0] as URLRequest;
+			var domain:String = URLUtil.getServerName(currentRequest.url);
+			var domainLength:int = int(domain.length);
+			var port:int = int(URLUtil.getPort(currentRequest.url));
+			this._tunnelSocket.writeByte(domainLength);
+			this._tunnelSocket.writeMultiByte(domain, SOCKS5Model.charSetEncoding);
+			this._tunnelSocket.writeByte(0); //We should split the port on the byte boundary so that we can support all ports!
+			this._tunnelSocket.writeByte(port);
+			//Note that SOCKS5Model.commEnd is only used to complete the HTTP request -- this is a fixed-size request
+			this._tunnelSocket.flush();
+		}//onAuthenticateTunnel
+		
+		private function onEstablishHTTPTunnel():void {
+			this.sendQueuedHTTPRequest();
+		}//onEstablishHTTPTunnel
+		
+		private function sendQueuedHTTPRequest():void {
+			var currentRequest:URLRequest = this._urlRequestBuffer.shift() as URLRequest;
+			var requestString:String = SOCKS5Model.createHTTPRequestString(currentRequest);				
+			this._tunnelSocket.writeMultiByte(requestString, SOCKS5Model.charSetEncoding);			
+			this._tunnelSocket.flush();
+		}//sendQueuedHTTPRequest
+		
+		private function authResponseOkay(respData:ByteArray):Boolean {
+			respData.position = 0;
+			var SOCKSVersion:int = respData.readByte();
+			var authMethod:int = respData.readByte();
+			if (SOCKSVersion != SOCKS5Model.SOCKS5_head_VERSION) {
+				return (false);
+			}//if
+			if (authMethod != SOCKS5Model.SOCKS5_auth_NOAUTH) {
+				return (false);
+			}//if			
+			return (true);
+		}//authResponseOkay
+		
+		private function tunnelResponseOkay(respData:ByteArray):Boolean {
+			respData.position = 0;
+			var SOCKSVersion:int = respData.readByte();
+			var status:int = respData.readByte();
+			if (SOCKSVersion != SOCKS5Model.SOCKS5_head_VERSION) {
+				return (false);
+			}//if
+			if (status != 0) {
+				return (false);
+			}//if
+			//Additional checks can be made here
+			/*
+field 1: SOCKS protocol version, 1 byte (0x05 for this version)
+field 2: status, 1 byte:
+0x00 = request granted
+0x01 = general failure
+0x02 = connection not allowed by ruleset
+0x03 = network unreachable
+0x04 = host unreachable
+0x05 = connection refused by destination host
+0x06 = TTL expired
+0x07 = command not supported / protocol error
+0x08 = address type not supported
+field 3: reserved, must be 0x00
+field 4: address type, 1 byte:
+0x01 = IPv4 address
+0x03 = Domain name
+0x04 = IPv6 address
+field 5: destination address of
+4 bytes for IPv4 address
+1 byte of name length followed by the name for Domain name
+16 bytes for IPv6 address
+field 6: network byte order port number, 2 bytes
+*/
+			return (true);
+		}//tunnelResponseOkay
+		
+		private function tunnelRequestComplete(respData:ByteArray):Boolean {
+			respData.position = respData.length - 4;
+			var respString:String = respData.readMultiByte(respData.length, SOCKS5Model.charSetEncoding);
+			respData.position = 0;
+			if (respString == SOCKS5Model.doubleLineEnd) {
+				return (true);
+			}//if
+			return (false);
 		}
 		
-	}
+		private function onTunnelData(eventObj:ProgressEvent):void {
+			var rawData:ByteArray = new ByteArray();
+			var stringData:String = new String();
+			this._tunnelSocket.readBytes(rawData);	
+			rawData.position = 0;
+			stringData = rawData.readMultiByte(rawData.length, SOCKS5Model.charSetEncoding);
+			rawData.position = 0;			
+			if (!this._authenticated) {
+				if (this.authResponseOkay(rawData)) {
+					this._authenticated = true;
+					this.onAuthenticateTunnel();
+					return;
+				}//if
+			}//if		
+			if (!this._tunneled) {
+				if (this.tunnelResponseOkay(rawData)) {
+					this._tunneled = true;					
+					this.sendQueuedHTTPRequest();
+					return;
+				}//if
+			}//if		
+			//this._responseBuffer
+			if (!this.tunnelRequestComplete(rawData)) {
+				rawData.position = 0;
+				this._responseBuffer.writeBytes(rawData, 0);
+				return;
+			}//if
+			rawData = this._responseBuffer;			
+			rawData.position = 0;
+			stringData = rawData.readMultiByte(rawData.length, SOCKS5Model.charSetEncoding);
+			rawData.position = 0;			
+			var dataEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONHTTPRESPONSE);	
+			trace ("Got HTTP response");
+			trace (stringData);
+			this.dispatchEvent(dataEvent);
+		}//onTunnelData
+		
+		
+			
+	}//SOCKS5Tunnel class
 
-}
+}//package
