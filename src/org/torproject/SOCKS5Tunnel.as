@@ -9,14 +9,15 @@ package org.torproject {
 	import flash.events.SecurityErrorEvent;
 	import flash.utils.ByteArray;
 	import org.torproject.events.SOCKS5TunnelEvent;
+	import org.torproject.model.HTTPResponse;
+	import org.torproject.model.HTTPResponseHeader;
 	import org.torproject.model.SOCKS5Model;
 	import flash.net.URLRequest;
 	import flash.net.URLRequestDefaults;
 	import flash.net.URLRequestHeader;
 	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
-	import org.torproject.utils.URLUtil;
-	import org.torproject.model.HTTPResponseHeader;
+	import org.torproject.utils.URLUtil;	
 	import org.torproject.TorControl;	
 	
 	/**
@@ -40,6 +41,10 @@ package org.torproject {
 		private var _requestActive:Boolean = false;
 		private var _urlRequestBuffer:Vector.<URLRequest> = new Vector.<URLRequest>();
 		private var _responseBuffer:ByteArray = new ByteArray();
+		private var _HTTPStatusReceived:Boolean = false;
+		private var _HTTPHeadersReceived:Boolean = false;
+		private var _HTTPResponse:HTTPResponse;		
+		private var _currentRequest:URLRequest;
 		
 		/**
 		 * Creates an instance of a SOCKS5 proxy tunnel.
@@ -114,17 +119,20 @@ package org.torproject {
 		public function loadHTTP(request:URLRequest):Boolean {
 			if (request == null) {
 				return (false);
-			}//if
+			}//if			
 			this._urlRequestBuffer.push(request);
 			this._responseBuffer = new ByteArray();
 			this._connected = false;
 			this._authenticated = false;
-			this._tunneled = false;			
+			this._tunneled = false;		
+			this._HTTPStatusReceived = false;
+			this._HTTPHeadersReceived = false;
 			if (this._tunnelSocket != null) {
 				this._tunnelSocket.removeEventListener(ProgressEvent.SOCKET_DATA, this.onTunnelData);
 				this._tunnelSocket.close();
 				this._tunnelSocket = null;
 			}//if
+			this._HTTPResponse = new HTTPResponse();
 			this._connectionType = SOCKS5Model.SOCKS5_conn_TCPIPSTREAM;
 			this._tunnelSocket = new Socket(this.tunnelIP, this.tunnelPort);
 			this._tunnelSocket.addEventListener(Event.CONNECT, this.onTunnelConnect);
@@ -136,7 +144,7 @@ package org.torproject {
 			trace ("SOCKS5Tunnel connected to \"" + this.tunnelIP + "\" on port " + this.tunnelPort);
 			this._connected = true;
 			this._tunnelSocket.removeEventListener(Event.CONNECT, this.onTunnelConnect);			
-			this._tunnelSocket.addEventListener(ProgressEvent.SOCKET_DATA, this.onTunnelData);
+			this._tunnelSocket.addEventListener(ProgressEvent.SOCKET_DATA, this.onTunnelData);			
 			var connectEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONCONNECT);
 			this.dispatchEvent(connectEvent);
 			this.authenticateTunnel();
@@ -152,8 +160,7 @@ package org.torproject {
 			this._tunnelSocket.addEventListener(ProgressEvent.SOCKET_DATA, this.onTunnelData);
 			var connectEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONDISCONNECT);
 			this.dispatchEvent(connectEvent);			
-		}//onTunnelData	
-		
+		}//onTunnelData			
 		
 		private function authenticateTunnel():void {			
 			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_head_VERSION);
@@ -186,6 +193,7 @@ package org.torproject {
 		
 		private function sendQueuedHTTPRequest():void {
 			var currentRequest:URLRequest = this._urlRequestBuffer.shift() as URLRequest;
+			this._currentRequest = currentRequest;
 			var requestString:String = SOCKS5Model.createHTTPRequestString(currentRequest);				
 			this._tunnelSocket.writeMultiByte(requestString, SOCKS5Model.charSetEncoding);			
 			this._tunnelSocket.flush();
@@ -213,31 +221,7 @@ package org.torproject {
 			}//if
 			if (status != 0) {
 				return (false);
-			}//if
-			//Additional checks can be made here
-			/*
-field 1: SOCKS protocol version, 1 byte (0x05 for this version)
-field 2: status, 1 byte:
-0x00 = request granted
-0x01 = general failure
-0x02 = connection not allowed by ruleset
-0x03 = network unreachable
-0x04 = host unreachable
-0x05 = connection refused by destination host
-0x06 = TTL expired
-0x07 = command not supported / protocol error
-0x08 = address type not supported
-field 3: reserved, must be 0x00
-field 4: address type, 1 byte:
-0x01 = IPv4 address
-0x03 = Domain name
-0x04 = IPv6 address
-field 5: destination address of
-4 bytes for IPv4 address
-1 byte of name length followed by the name for Domain name
-16 bytes for IPv6 address
-field 6: network byte order port number, 2 bytes
-*/
+			}//if			
 			return (true);
 		}//tunnelResponseOkay
 		
@@ -250,6 +234,23 @@ field 6: network byte order port number, 2 bytes
 			}//if
 			return (false);
 		}
+		
+		private function handleHTTPRedirect(responseObj:HTTPResponse):void {
+			if (this._currentRequest.followRedirects) {
+				if ((responseObj.statusCode == 301) || (responseObj.statusCode == 302)) {
+					trace ("Detected a redirect!");
+					var redirectURL:HTTPResponseHeader = responseObj.getHeader("Location");
+					trace ("Trying: "+redirectURL);
+					if (redirectURL != null) {
+						this._currentRequest.url = redirectURL.value;
+						this._urlRequestBuffer.push(this._currentRequest);
+						this._HTTPStatusReceived = false;
+						this._HTTPHeadersReceived = false;
+						this.sendQueuedHTTPRequest();
+					}//if
+				}//if				
+			}//if
+		}//handleHTTPRedirect
 		
 		private function onTunnelData(eventObj:ProgressEvent):void {
 			var rawData:ByteArray = new ByteArray();
@@ -271,20 +272,40 @@ field 6: network byte order port number, 2 bytes
 					this.sendQueuedHTTPRequest();
 					return;
 				}//if
-			}//if					
+			}//if
+			if (!this._HTTPStatusReceived) {
+				if (this._HTTPResponse.parseResponseStatus(this._responseBuffer)) {
+					this._HTTPStatusReceived = true;
+					var statusEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONHTTPSTATUS);			
+					statusEvent.httpResponse = this._HTTPResponse;	
+					this.dispatchEvent(statusEvent);		
+					trace ("STATUS RECEIVED!");
+					this.handleHTTPRedirect(this._HTTPResponse);
+				}//if
+			}//if
+			if (!this._HTTPHeadersReceived) {
+				if (this._HTTPResponse.parseResponseHeaders(this._responseBuffer)) {
+					this._HTTPHeadersReceived = true;
+					statusEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONHTTPHEADERS);			
+					statusEvent.httpResponse = this._HTTPResponse;	
+					this.dispatchEvent(statusEvent);	
+					trace ("HEADERS RECEIVED!");
+				}//if
+			}//if			
 			if (!this.tunnelRequestComplete(rawData)) {				
 				rawData.readBytes(this._responseBuffer, this._responseBuffer.length);				
 				return;
 			}//if
-			rawData.readBytes(this._responseBuffer, this._responseBuffer.length);				
+			rawData.readBytes(this._responseBuffer, this._responseBuffer.length);
+		//	trace ("ALL DATA!");			
+		//	trace (this._responseBuffer.toString());
+			this._HTTPResponse.parseResponseBody(this._responseBuffer);
 			this._responseBuffer.position = 0;
-			stringData = this._responseBuffer.readMultiByte(this._responseBuffer.length, SOCKS5Model.charSetEncoding);
-			this._responseBuffer.position = 0;
+			stringData = this._responseBuffer.readMultiByte(this._responseBuffer.length, SOCKS5Model.charSetEncoding);					
 			var dataEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONHTTPRESPONSE);			
-			dataEvent.responseBody = stringData;
-			dataEvent.responseData = new ByteArray();
-			dataEvent.responseData.readBytes(this._responseBuffer);
-			dataEvent.responseHeaders = new Vector.<HTTPResponseHeader>();
+			dataEvent.httpResponse = this._HTTPResponse;	
+			dataEvent.httpResponse.rawResponse = new ByteArray();
+			dataEvent.httpResponse.rawResponse.writeBytes(this._responseBuffer);			
 			this.dispatchEvent(dataEvent);			
 		}//onTunnelData
 		

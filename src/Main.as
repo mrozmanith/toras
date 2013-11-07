@@ -59,8 +59,10 @@ package  {
 				
 		
 		private function onSOCKSTunnelResponse(eventObj:SOCKS5TunnelEvent):void {
-			trace ("http://www.google.com/ loaded via Tor:");
-			trace (eventObj.responseBody);
+		//	trace ("Loaded via Tor:");
+		//	trace (eventObj.httpResponse.body);
+		//	trace ("Loaded via Tor raw:");
+	//		trace (eventObj.httpResponse.rawResponse.toString());
 		}
 		
 		private function onTorLogMessage(eventObj:TorControlEvent):void {
@@ -82,12 +84,12 @@ package  {
 		private function onTorControlReady(eventObj:TorControlEvent):void {
 			trace ("Main.as > TorControl is connected, authenticated, and ready for commands.");
 			//Listen for some internal Tor events...
-			torControl.addEventListener(TorControlEvent.TOR_INFO, this.onTorINFOMessage);
-			torControl.addEventListener(TorControlEvent.TOR_DEBUG, this.onTorDEBUGMessage);
-			torControl.addEventListener(TorControlEvent.TOR_NOTICE, this.onTorNOTICEMessage);			
+		//	torControl.addEventListener(TorControlEvent.TOR_INFO, this.onTorINFOMessage);
+		//	torControl.addEventListener(TorControlEvent.TOR_DEBUG, this.onTorDEBUGMessage);
+		//	torControl.addEventListener(TorControlEvent.TOR_NOTICE, this.onTorNOTICEMessage);			
 			//Create an anonymous tunnel connection for streaming HTTP requests through Tor...
 			this.tunnel = new SOCKS5Tunnel();
-			var proxyRequest:URLRequest = new URLRequest("http://www.google.com/");
+			var proxyRequest:URLRequest = new URLRequest("http://www.torontocitylife.com/");
 			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPRESPONSE, this.onSOCKSTunnelResponse);
 			this.tunnel.loadHTTP(proxyRequest);			
 		}
