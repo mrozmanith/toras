@@ -1,9 +1,13 @@
 package  {
 	
+	import air.desktop.URLFilePromise;
 	import flash.display.MovieClip;
 	import flash.events.Event;
 	import org.torproject.events.TorControlEvent;
 	import org.torproject.TorControl;
+	import org.torproject.events.SOCKS5TunnelEvent
+	import org.torproject.SOCKS5Tunnel;
+	import flash.net.URLRequest;
 	
 	/**
 	 * Sample class to demonstrate dynamically launching Tor network connectivity using the included
@@ -36,7 +40,8 @@ package  {
 	 */
 	public class Main extends MovieClip {
 		
-		private static var torControl:TorControl=null;
+		private static var torControl:TorControl = null;
+		private var tunnel:SOCKS5Tunnel = null;
 		
 		public function Main() {
 			this.launchTorControl();	
@@ -47,26 +52,43 @@ package  {
 				torControl = new TorControl();
 				//We want to listen to .ONAUTHENTICATE since .ONCONNECT only signals that a connection has been established.
 				torControl.addEventListener(TorControlEvent.ONAUTHENTICATE, this.onTorControlReady);
-				torControl.addEventListener(TorControlEvent.ONLOGMSG, this.onTorLogMessage);
-			//	torControl.addEventListener(TorControlEvent.ONEVENT, this.onTorEvent);
+				torControl.addEventListener(TorControlEvent.ONLOGMSG, this.onTorLogMessage);			
 				torControl.connect();
 			}//if
+		}
+				
+		
+		private function onSOCKSTunnelResponse(eventObj:SOCKS5TunnelEvent):void {
+			//trace ("Tor SOCKS proxy: "+eventObj.HTTPResponseBody);
 		}
 		
 		private function onTorLogMessage(eventObj:TorControlEvent):void {
 			trace (TorControl.executable + " > "+eventObj.rawMessage);
 		}
 		
-		private function onTorEvent(eventObj:TorControlEvent):void {
-			trace ("Main.as > Async event \""+eventObj.torEvent+"\" received: "+eventObj.body);
+		private function onTorDEBUGMessage(eventObj:TorControlEvent):void {
+			trace ("Tor DEBUG event: "+eventObj.body);
 		}
 		
+		private function onTorINFOMessage(eventObj:TorControlEvent):void {
+			trace ("Tor INFO event: "+eventObj.body);
+		}
+		
+		private function onTorNOTICEMessage(eventObj:TorControlEvent):void {
+			trace ("Tor NOTICE event: "+eventObj.body);
+		}
+				
 		private function onTorControlReady(eventObj:TorControlEvent):void {
 			trace ("Main.as > TorControl is connected, authenticated, and ready for commands.");
-			//Enable "CIRC" event notification, see document "TC: A Tor control protocol (Version 1) -- 4.1. Asynchronous events" for more information, here:
-			//   https://gitweb.torproject.org/torspec.git?a=blob_plain;hb=HEAD;f=control-spec.txt
-			//Event listener added to TorControl instance should listen for TorControlEvent.ONEVENT
-			torControl.enableTorEvent("CIRC"); 
+			//Listen for some internal Tor events...
+		//	torControl.addEventListener(TorControlEvent.TOR_INFO, this.onTorINFOMessage);
+		//	torControl.addEventListener(TorControlEvent.TOR_DEBUG, this.onTorDEBUGMessage);
+		//	torControl.addEventListener(TorControlEvent.TOR_NOTICE, this.onTorNOTICEMessage);			
+			//Create a tunnel connection for streaming HTTP requests.
+			this.tunnel = new SOCKS5Tunnel();			
+			var proxyRequest:URLRequest = new URLRequest("http://www.google.com/");
+			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPRESPONSE, this.onSOCKSTunnelResponse);
+			this.tunnel.loadHTTP(proxyRequest);			
 		}
 		
 	}

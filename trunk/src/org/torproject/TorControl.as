@@ -4,7 +4,9 @@ package org.torproject  {
 	import flash.net.Socket;
 	import flash.events.Event;
 	import flash.events.ProgressEvent;
-	import flash.filesystem.File;
+	import flash.events.IOErrorEvent;	
+	import flash.events.SecurityErrorEvent;
+	import flash.filesystem.File;	
 	import flash.filesystem.FileStream;
 	import flash.filesystem.FileMode;
 	import flash.desktop.NativeApplication;
@@ -12,7 +14,7 @@ package org.torproject  {
 	import flash.desktop.NativeProcessStartupInfo;
 	import org.torproject.events.TorControlEvent;
 	import org.torproject.model.TorControlModel;
-	import flash.utils.setTimeout;
+	import flash.utils.setTimeout;	
 	
 	/**
 	 * Provides control and event handling services for core Tor services.
@@ -50,16 +52,16 @@ package org.torproject  {
 		private static const defaultSOCKSIP:String = "127.0.0.1"; //Default SOCKS IP (usually 127.0.0.1)
 		private static const defaultSOCKSPort:int = 1080; //Default SOCKS port (usualy 1080)
 		//Default assignments...
-		private var _controlIP:String = defaultControlIP; 
-		private var _controlPort:int = defaultControlPort;
-		private var _SOCKSIP:String = defaultSOCKSIP; 
-		private var _SOCKSPort:int = defaultSOCKSPort;
-		private var _controlPassHash:String = ""; //Password hash (not yet implemented)
-		private var _socket:Socket = null; //The actual control socket
+		private static var _controlIP:String = defaultControlIP; 
+		private static var _controlPort:int = defaultControlPort;
+		private static var _SOCKSIP:String = defaultSOCKSIP; 
+		private static var _SOCKSPort:int = defaultSOCKSPort;
+		private static var _controlPassHash:String = ""; //Password hash (not yet implemented)
+		private static var _socket:Socket = null; //The actual control socket
 		private var _connectDelay:Number = 1; //The delay, in seconds, to hold before attempting to connect to the control socket
 		//Both of the following must be true before further commands can be issued:
-		private var _connected:Boolean = false; //Is control socket connected?
-		private var _authenticated:Boolean = false; //Has control socket authenticated?
+		private static var _connected:Boolean = false; //Is control socket connected?
+		private static var _authenticated:Boolean = false; //Has control socket authenticated?
 		public static const rootTorPath:String = "./Tor_x86/"; //Relative path (to the output SWF / AIR file) to the Tor binary directory
 		public static const executable:String = "tor.exe"; //Differs based on OS -- how best to dynamically control this?
 		public static const configFile:String = "torrc"; //Standard config file name
@@ -98,11 +100,11 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		public function TorControl(controlIP:String = defaultControlIP, controlPort:int = defaultControlPort, 
 									SOCKSIP:String=defaultSOCKSIP, SOCKSPort:int=defaultSOCKSPort,
 									controlPassHash:String="", connectDelay:Number=1) {
-			this._controlIP = controlIP;
-			this._controlPort = controlPort;
-			this._SOCKSIP = SOCKSIP;
-			this._SOCKSPort = SOCKSPort;
-			this._controlPassHash = controlPassHash;
+			_controlIP = controlIP;
+			_controlPort = controlPort;
+			_SOCKSIP = SOCKSIP;
+			_SOCKSPort = SOCKSPort;
+			_controlPassHash = controlPassHash;
 			this._connectDelay = connectDelay*1000;
 		}//constructor
 		
@@ -132,17 +134,39 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		 */
 		public function connect(... args):void {
 			this.launchTorProcess();
-			if (this._socket == null) {
+			if (_socket == null) {
 				if ((this._connectDelay > 0) && (args[0]!=true)){
 					setTimeout(this.connect, this._connectDelay, true);					
 					return;
-				}//if				
-				this._socket = new Socket(this._controlIP, this._controlPort);
-				this._socket.addEventListener(Event.CONNECT, this.onConnect);
-				this._socket.addEventListener(ProgressEvent.SOCKET_DATA, this.onData);				
+				}//if	
+				try {					
+					_socket = new Socket(_controlIP, _controlPort);
+					_socket.addEventListener(Event.CONNECT, this.onConnect);
+					_socket.addEventListener(IOErrorEvent.IO_ERROR, this.onConnectError);
+					_socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, this.onConnectSecurityError);
+					_socket.addEventListener(ProgressEvent.SOCKET_DATA, this.onData);						
+				} catch (err:*) {
+					trace (err);
+				}//catch
 			} else {				
 			}//else
 		}//connect
+		
+		/**
+		 * Disconnects from the Tor control socket. Note that the Tor service may still be running at this point.
+		 * 
+		 * @param	shutdownService Also attempts to shut down the running Tor services process if true.
+		 */
+		public function disconnect(shutdownService:Boolean=true):void {
+			if (shutdownService) {
+				this.stopTorProcess();
+			}//if				
+			_socket.removeEventListener(Event.CONNECT, this.onConnect);
+			_socket.removeEventListener(IOErrorEvent.IO_ERROR, this.onConnectError);
+			_socket.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, this.onConnectSecurityError);
+			_socket.removeEventListener(ProgressEvent.SOCKET_DATA, this.onData);
+			_socket = null;
+		}//disconnect
 		
 		/**
 		 * Enables (true) or disables (false) the automatic launching of the Tor services binary at startup.
@@ -158,12 +182,14 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		}//get launchServices
 		
 		/**
-		 * Attempts to launch the Tor process (binary). TorControl can communicate with a properly
-		 * configured Tor process even if it didn't launch it. Developers can bypass this method altogether
-		 * if the Tor process will be started manually.
-		 * Be sure to update the TorControl <code>config</code> property with any custom startup requirements.
+		 * Attempts to launch the Tor process (binary). TorControl can communicate with a properly configured 
+		 * Tor process even if it didn't launch it. Developers can bypass this method altogether if the Tor 
+		 * process will be started manually. Be sure to update the TorControl <code>config</code> property 
+		 * with any custom startup requirements.
+		 * This function also starts listening to the Event.EXITING event on the native application object if
+		 * the Tor process was successfully launched.
 		 */
-		private function launchTorProcess():void {
+		public function launchTorProcess():void {
 			if (!this._launchServices) {
 				return;
 			}//if
@@ -194,17 +220,69 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 				}//catch
 			} else {
 				trace ("TorControl.launchTorProcess > NativeProcess is not supported. Tor must be started manually.");
+				trace ("TorControl.launchTorProcess > You may also need to enable the \"Extended Desktop\" profile for your AIR application.");
 			}//else
 		}//launchTorProcess
 		
-		private function stopTorProcess(eventObj:Event):void {
-			NativeApplication.nativeApplication.removeEventListener(Event.EXITING, this.stopTorProcess);
-			if (torProcess == null) {
-				return;
-			}//if
-			trace ("TorControl > Shutting down Tor process...");
-			this.sendRawControlMessage(TorControlModel.getControlMessage("shutdown")); 
+		/**
+		 * Stops a running Tor process, if one was started by TorContol. This function also stops listening to
+		 * the Event.EXITING event on the native application object.
+		 * 
+		 * @param	eventObj
+		 */
+		public function stopTorProcess(... args):void {
+			try {
+				NativeApplication.nativeApplication.removeEventListener(Event.EXITING, this.stopTorProcess);
+				if (torProcess == null) {
+					return;
+				}//if
+				trace ("TorControl > Shutting down Tor process...");
+				this.sendRawControlMessage(TorControlModel.getControlMessage("shutdown")); 
+			} catch (err:*) {				
+			}//catch
 		}//stopTorProcess
+		
+		/**
+		 * The IP of the Tor control socket (usually 127.0.0.1).
+		 */
+		public static function get controlIP():String {
+			return (_controlIP);
+		}//get controlIP
+		
+		/**
+		 * The port of the Tor control socket (usually 9151).
+		 */
+		public static function get controlPort():int {
+			return (_controlPort);
+		}//get controlPort
+		
+		/**
+		 * The IP of the Tor SOCKS proxy socket (usually 127.0.0.1).
+		 */
+		public static function get SOCKSIP():String {
+			return (_SOCKSIP);
+		}//get SOCKSIP
+		
+		/**
+		 * The port of the Tor SOCKS proxy socket (usually 1080).
+		 */
+		public static function get SOCKSPort():int {
+			return (_SOCKSPort);
+		}//get SOCKSPort		
+		
+		/**
+		 * The status of the Tor control connection: true=connected, false=not connected
+		 */
+		public static function get connected():Boolean {
+			return (_connected);
+		}//get connected
+		
+		/**
+		 * The authentication status of the Tor control connection: true=authenticated, false=not authenticated
+		 */
+		public static function get authenticated():Boolean {
+			return (_authenticated);
+		}//get authenticated
 		
 		/**
 		 * Generates the Tor config file from settings derived from various class properties (see near top of this class declaration).
@@ -216,11 +294,11 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 			var stream:FileStream = new FileStream();
 			stream.open(configFile, FileMode.WRITE);
 			var configString:String = new String(configData.children()[0].toString());
-			configString = this.replaceMeta(configString, "%control_ip%", String(this._controlIP));
-			configString = this.replaceMeta(configString, "%control_port%", String(this._controlPort));
-			configString = this.replaceMeta(configString, "%control_passhash%", String(this._controlPassHash));
-			configString = this.replaceMeta(configString, "%socks_ip%", String(this._SOCKSIP));
-			configString = this.replaceMeta(configString, "%socks_port%", String(this._SOCKSPort));
+			configString = this.replaceMeta(configString, "%control_ip%", String(_controlIP));
+			configString = this.replaceMeta(configString, "%control_port%", String(_controlPort));
+			configString = this.replaceMeta(configString, "%control_passhash%", String(_controlPassHash));
+			configString = this.replaceMeta(configString, "%socks_ip%", String(_SOCKSIP));
+			configString = this.replaceMeta(configString, "%socks_port%", String(_SOCKSPort));
 			stream.writeMultiByte(configString, TorControlModel.charSetEncoding);
 			stream.close();
 		}//generateConfigFile
@@ -245,19 +323,80 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		 * @param	eventObj An Event object.
 		 */
 		private function onConnect(eventObj:Event):void {
-			trace ("TorControl.onConnect >> Connected to Tor control socket at " + this._controlIP + ":" + this._controlPort);
-			this._connected = true;
+			trace ("TorControl.onConnect >> Connected to Tor control socket at " + _controlIP + ":" + _controlPort);
+			_connected = true;
 			this.dispatchEvent(new TorControlEvent(TorControlEvent.ONCONNECT));
 			this.authenticate();
 		}//onConnect
 		
 		/**
+		 * Invoked when TorControl receives an IOErrorEvent.
+		 * 
+		 * @param	eventObj An IOErrorEvent object.
+		 */
+		private function onConnectError(eventObj:IOErrorEvent):void {
+			trace ("TorControl.onConnectError >> Couldn't connect to Tor control socket at " + _controlIP + ":" + _controlPort+": "+ eventObj.toString());
+			_connected = false;
+			var errorEventObj:TorControlEvent = new TorControlEvent(TorControlEvent.ONCONNECTERROR);
+			errorEventObj.status = eventObj.errorID;			
+			errorEventObj.body = eventObj.toString();
+			errorEventObj.rawMessage = eventObj.toString();
+			this.dispatchEvent(errorEventObj);
+		}//onConnectError
+		
+		/**
+		 * Invoked when TorControl receives an SecurityErrorEvent.
+		 * 
+		 * @param	eventObj An SecurityErrorEvent object.
+		 */
+		private function onConnectSecurityError(eventObj:IOErrorEvent):void {
+			trace ("TorControl.onConnectSecurityError >> Couldn't connect to Tor control socket at " + _controlIP + ":" + _controlPort+": "+ eventObj.toString());
+			_connected = false;
+			var errorEventObj:TorControlEvent = new TorControlEvent(TorControlEvent.ONCONNECTERROR);
+			errorEventObj.status = eventObj.errorID;			
+			errorEventObj.body = eventObj.toString();
+			errorEventObj.rawMessage = eventObj.toString();
+			this.dispatchEvent(errorEventObj);
+		}//onConnectSecurityError
+		
+		/**
 		 * Send the authentication message to the Tor control socket.
 		 */
 		private function authenticate():void {
-			this._authenticated = false;
+			_authenticated = false;
 			this.sendRawControlMessage(TorControlModel.getControlMessage("authenticate"));
-		}//authenticate
+		}//authenticate		
+		
+		/**
+		 * Sends a raw control message to the connected and authenticated control socket. The message must be a
+		 * properly formatted Tor v1 Protocol string (https://gitweb.torproject.org/torspec.git?a=blob_plain;hb=HEAD;f=control-spec.txt).
+		 * 
+		 * @param	msg A Tor v1 Protocol-formatted control message (WITHOUT trailing linefeeds)
+		 * 
+		 * @return True if the message was sent successfully to the socket, false if the send failed (for example,
+		 * not connected or authenticated).
+		 */
+		public function sendRawControlMessage(msg:String):Boolean {
+			if ((!_socket) || (_socket == null)) {
+				return (false);
+			}//if
+			this._synchResponseBuffer = "";
+			this._synchRawResponseBuffer = "";
+			msg = msg + TorControlModel.controlLineEnd;
+			_socket.writeMultiByte(msg, TorControlModel.charSetEncoding);
+			_socket.flush();
+			return (true);
+		}//sendRawControlMessage
+		
+		override public function addEventListener(type:String, listener:Function, useCapture:Boolean = false, priority:int = 0, useWeakReference:Boolean = false):void {
+			var torEventType:String = null;
+			if (TorControlEvent.isTorEvent(type)) {
+				var torEventShortCode:String = TorControlEvent.getTorEventShortcode(type);
+				trace ("Enabling tor event: " + type + " using shortcode \"" + torEventShortCode + "\"");
+				this.enableTorEvent(torEventShortCode);
+			}//if
+			super.addEventListener(type, listener, useCapture, priority, useWeakReference);			
+		}//addEventListener
 		
 		/**
 		 * Enable a Tor control event (sent from the running process).
@@ -267,8 +406,8 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		 * @see https://gitweb.torproject.org/torspec.git?a=blob_plain;hb=HEAD;f=control-spec.txt (Section "4.1. Asynchronous events)
 		 * 
 		 */
-		public function enableTorEvent(eventType:String):void {
-			if ((!this._connected) || (!this._authenticated)) {
+		private function enableTorEvent(eventType:String):void {
+			if ((!_socket) || (!_authenticated)) {
 				return;
 			}//if
 			var torMessage:String = TorControlModel.getControlMessage("enableevent");
@@ -286,7 +425,7 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		 * @see https://gitweb.torproject.org/torspec.git?a=blob_plain;hb=HEAD;f=control-spec.txt (Section "4.1. Asynchronous events)
 		 * 
 		 */
-		public function disableTorEvent(eventType:String):void {
+		private function disableTorEvent(eventType:String):void {
 			var torMessage:String = TorControlModel.getControlMessage("enableevent");
 			this.removeAsyncEvent(eventType);
 			trace ("TorControl.disableTorEvent > " + eventType + " -- Active events: " + this.enabledAsyncEventList);
@@ -297,39 +436,13 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		/**
 		 * Disables all Tor control events (sent from the running process).		 
 		 */
-		public function disableAllTorEvents():void {
+		private function disableAllTorEvents():void {
 			var torMessage:String = TorControlModel.getControlMessage("enableevent");
 			 this._enabledEvents = new Array();
 			trace ("TorControl.disableAllTorEvents > Active events: " + this.enabledAsyncEventList);
 			torMessage = this.replaceMeta(torMessage, "%event_list%", this.enabledAsyncEventList);
 			this.sendRawControlMessage(torMessage);
 		}//disableAllTorEvents
-		
-		/**
-		 * Sends a raw control message to the connected and authenticated control socket. The message must be a
-		 * properly formatted Tor v1 Protocol string (https://gitweb.torproject.org/torspec.git?a=blob_plain;hb=HEAD;f=control-spec.txt).
-		 * 
-		 * @param	msg A Tor v1 Protocol-formatted control message (without trailing linefeeds!)
-		 * 
-		 * @return True if the message was sent successfully to the socket, false if the send failed (for example,
-		 * not connected or authenticated).
-		 */
-		public function sendRawControlMessage(msg:String):Boolean {
-			if ((!this._connected) || (this._socket == null)) {
-				return (false);
-			}//if
-			this._synchResponseBuffer = "";
-			this._synchRawResponseBuffer = "";
-			msg = msg + TorControlModel.controlLineEnd;
-			this._socket.writeMultiByte(msg, TorControlModel.charSetEncoding);
-			this._socket.flush();
-			return (true);
-		}//sendRawControlMessage
-		
-		override public function addEventListener(type:String, listener:Function, useCapture:Boolean = false, priority:int = 0, useWeakReference:Boolean = false):void {
-		//	if (type==TorControlEvent.
-			super.addEventListener(type, listener, useCapture, priority, useWeakReference);
-		}//addEventListener
 		
 		private function get enabledAsyncEventList():String {
 			var list:String = new String();
@@ -363,30 +476,28 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		}//removeAsyncEvent		
 		
 		private function onData(eventObj:ProgressEvent):void {
-			var receivedMsg:String = this._socket.readMultiByte(this._socket.bytesAvailable, TorControlModel.charSetEncoding);
+			var receivedMsg:String = _socket.readMultiByte(_socket.bytesAvailable, TorControlModel.charSetEncoding);
 			receivedMsg = receivedMsg.split(String.fromCharCode(10)).join("");
 			var msgSplit:Array = receivedMsg.split(String.fromCharCode(13));
 			for (var count:uint = 0; count < msgSplit.length; count++) {
 				var currentLine:String = msgSplit[count] as String;
 				var msgObj:Object = this.parseReceivedData(currentLine);
-				if (msgObj.status == TorControlModel.asynchEventStatusCode) {
-					//trace ("TorControl.onData > Received asynchronous event: "+msgObj.status+" "+msgObj.body);
+				if (msgObj.status == TorControlModel.asynchEventStatusCode) {					
 					//Asynchronous notification;
 					this._asynchEventBuffer += msgObj.body;
 					this._asynchRawEventBuffer += receivedMsg;
-					if (this.isMultilineMessage(msgObj.multilineStatusIndicator)) {
+					if (this.isMultilineMessage(msgObj.multilineStatusIndicator)) {						
 						this._asynchEventBuffer += TorControlModel.controlLineEnd;
 						this._asynchRawEventBuffer += TorControlModel.controlLineEnd;
-					} else {
+					} else {						
 						this.dispatchAsynchTorEvent(msgObj);
 						this._asynchEventBuffer = "";
 						this._asynchRawEventBuffer = "";
 					}//else
 					return;
-				} else if ((!this._authenticated) && (!TorControlModel.isControlResponseError(msgObj.status))) {
-					//Authentication response
-				//	trace ("TorControl.onData > Received control authentication response: "+msgObj.status+" "+msgObj.body);				
-					this._authenticated = true;
+				} else if ((!_authenticated) && (!TorControlModel.isControlResponseError(msgObj.status))) {
+					//Authentication response					
+					_authenticated = true;
 					var event:TorControlEvent = new TorControlEvent(TorControlEvent.ONAUTHENTICATE);
 					event.status = msgObj.status;
 					event.body = msgObj.body;
@@ -407,7 +518,7 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 					}//else
 				}//else
 			}//for
-		}//onData
+		}//onData		
 		
 		private function isMultilineMessage(separator:String):Boolean {
 			if (separator == " ") {
@@ -418,14 +529,21 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		}//isMultilineMessage
 		
 		private function dispatchAsynchTorEvent(msgObj:Object):void {
-			var event:TorControlEvent = new TorControlEvent(TorControlEvent.ONEVENT);
-			event.status = msgObj.status;
-			event.body = this._asynchEventBuffer;
-			var eventType:String = msgObj.body;
-			eventType = eventType.split(" ")[0] as String;
-			event.torEvent = eventType;
-			event.rawMessage = this._asynchRawEventBuffer;
-			this.dispatchEvent(event);
+			try {
+				var eventType:String = msgObj.body;				
+				eventType = eventType.split(" ")[0] as String;							
+				var torEventType:String = TorControlEvent.getTorEventLongcode(eventType);				
+				if (torEventType == null) {
+					return;
+				}//if				
+				var event:TorControlEvent = new TorControlEvent(torEventType);
+				event.status = msgObj.status;
+				event.body = this._asynchEventBuffer.substr(eventType.length+1); //Strip out event type prefix + extra space following
+				event.torEvent = eventType;
+				event.rawMessage = this._asynchRawEventBuffer;
+				this.dispatchEvent(event);
+			} catch (err:*) {				
+			}//catch
 		}//dispatchAsynchTorEvent
 		
 		private function dispatchTorResponse(msgObj:Object):void {
@@ -450,7 +568,7 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		
 		private function replaceMeta(input:String, meta:String, replace:String):String {
 			return (input.split(meta).join(replace));
-		}//replaceMeta
+		}//replaceMeta		
 		
 	}//TorControl class
 
