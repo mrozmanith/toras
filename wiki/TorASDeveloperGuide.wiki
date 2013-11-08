@@ -166,7 +166,7 @@ Once the request has been properly constructed, it is used as the parameter for 
 
 {{{
 import org.torproject.SOCKS5Tunnel;
-import org.torproject.events.SOCKS5TunnelEvent
+import org.torproject.events.SOCKS5TunnelEvent;
 
 var tunnel:SOCK5Tunnel = new SOCKS5Tunnel();
 tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPRESPONSE, onSOCKSTunnelResponse);
@@ -181,3 +181,26 @@ function onSOCKSTunnelResponse(eventObj:SOCKS5TunnelEvent):void {
 There are other events that you can listen to, including _SOCKS5TunnelEvent.ONHTTPSTATUS_, which is broadcast as soon as the connection has received enough information to fully parse the HTTP response code (200, 404, etc.), and _SOCKS5TunnelEvent.ONHTTPHEADERS_ which is dispatched when enough HTTP header information has been received. The _SOCKS5TunnelEvent.ONHTTPRESPONSE_ event is the final event dispatched, once the complete response body has been received.
 
 SOCKS5Tunnel attempts to reconstruct chunked HTTP responses so that the contents of the _SOCKS5TunnelEvent.httpResponse.body_ property contains the reconstructed (un-chunked) response data. However, the raw HTTP response, including headers and chunked sections, can be accessed via the _SOCKS5TunnelEvent.httpResponse.rawResponse_ property (a ByteArray).
+
+Putting this all together, a sample HTTP request would look something like this:
+
+{{{
+import import flash.net.URLRequest;
+import import flash.net.URLVariables;
+import org.torproject.SOCKS5Tunnel;
+import org.torproject.events.SOCKS5TunnelEvent;
+
+var request:URLRequest=new URLRequest("http://www.myserver.com/");
+var variables=new URLVariables();
+variables.userName="Patrick";
+variables.password="pass123";
+request.data=variables;
+var tunnel:SOCK5Tunnel = new SOCKS5Tunnel();
+tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPRESPONSE, onSOCKSTunnelResponse);
+tunnel.loadHTTP(request);	
+
+function onSOCKSTunnelResponse(eventObj:SOCKS5TunnelEvent):void {
+   trace ("Got response: ");
+   trace (eventObj.httpResponse.body);
+}
+}}}
