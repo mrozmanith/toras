@@ -36,7 +36,7 @@ The following events are broadcast by the TorControl instance:
 *`TorControlEvent.ONCONNECT`* - Dispatched when the TorControl instance successfully connects to what is believed to be a Tor control socket. Until the ONAUTHENTICATE event is dispatched (and verified as a Tor connection), the socket is considered unavailable.
 
  
-*`TorControlEvent.ONCONNECTERROR`* - Dispatched when the TorControl instance experiences an error connecting to the Tor control socket. 
+*`TorControlEvent.ONCONNECTERROR`* - Dispatched when the TorControl instance experiences an error connecting to the Tor control socket.  Error details are included in the event's _error_ object. 
 
  
 *`TorControlEvent.ONAUTHENTICATE`* - Dispatched when the Tor control connection has been authenticated and is ready to receive commands. For most applications, it's more useful to listen to this event rather than the ONCONNECT event.
@@ -100,10 +100,10 @@ The following events are broadcast by the SOCKS5Tunnel instance:
 *`SOCKS5Tunnel.ONCONNECT`* - Dispatched when the SOCKS5Tunnel instance successfully connects to what is believed to be a Tor communications (SOCKS5) socket. During most successful requests, ONCONNECT is dispatched first, followed by ONAUTHENTICATE.
 
  
-*`SOCKS5Tunnel.ONCONNECTERROR`* - Dispatched when the SOCKS5Tunnel instance experiences an error connecting to the Tor control socket. 
+*`SOCKS5Tunnel.ONCONNECTERROR`* - Dispatched when the SOCKS5Tunnel instance experiences an error connecting to the Tor control socket. Error details are included in the event's _error_ object. 
 
 
-*`SOCKS5Tunnel.ONDISCONNECT`* - Dispatched when the SOCKS5Tunnel socket disconnects, either as the result of a local action, or because the connection was dropped remotely.
+*`SOCKS5Tunnel.ONDISCONNECT`* - Dispatched when the SOCKS5Tunnel socket disconnects, either as the result of a local action, or because the connection was dropped remotely. Disconnection details are included in the event's _error_ object.
 
  
 *`SOCKS5Tunnel.ONAUTHENTICATE`* - Dispatched when the SOCKS5 tunnel connection has been authenticated and is ready to receive commands. Most of the time this event is followed by the actual tunneled request itself.
