@@ -133,6 +133,29 @@ function onTorReady(eventObj:TorControlEvent):void {
 
 As mentioned in the previous section, it is not necessary to use TorControl to start the Tor service. If you have already started it and have noted the SOCKS IP and port settings, you can communicate through Tor's proxy using a SOCKS5 "tunnel".
 
-While the running Tor service provides both control and communication connections, these are independent, as are the two main classes of TorAS.
+While the running Tor service provides both control and communication connections, these are independent and optional, as are the two main classes of TorAS.
 
-The SOCKS5Tunnel class takes care of creating this tunnel
+The SOCKS5Tunnel class crates the SOCKS5 tunnel which the Tor communication channel (circuit) uses to proxy requests. Each request is encrypted and sent through the Tor network until reaching an "exit node" which performs the actual request and response. For all requests, TorAS uses Tor's internal DNS resolution mechanism which adds extra security by not exposing domain lookups.
+
+== HTTP Requests ==
+
+The most common type of request via a SOCKS5Tunnel is the HTTP request, similar to ActionScript's URLLoader class. SOCKS5Tunnel uses the URLRequest class to determine which server to communicate with, what data to include with the request. You would create a URLRequest instance in exactly the same way you would for a URLLoader instance:
+
+{{
+import import flash.net.URLRequest;
+import import flash.net.URLVariables;
+
+var request:URLRequest=new URLRequest("http://www.myserver.com/");
+var variables:URLVariables=new URLVariables();
+vairables.userName="Patrick";
+variables.password="pass123";
+request.data=variables;
+}}
+
+Not all properties or a URLRequest instance are supported by TorAS (yet!) These include:
+
+*authenticate, cacheResponse, contentType, digest, idleTimeout, method, useCache*
+
+Additionally, the following method is not yet included:
+
+*useRedirectURL*
