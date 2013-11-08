@@ -1,14 +1,72 @@
 #summary TorAS Events Reference
 #labels TorAS,ActionScript,events
 
-= Introduction =
+= TorControl Events =
 
-Add your content here.
+The following events are broadcast by the TorControl instance:
 
+*TorControlEvent.ONLOGMSG* - Dispatched whenever TorControl receives a Tor log message via STDOUT. This type of message will only ever be received if TorControl is used to start the Tor process. The Tor log message will be included in the event's _body_ property.
 
-= Details =
+*TorControlEvent.ONCONNECT* -
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+*TorControlEvent.ONCONNECTERROR* - 
+
+*TorControlEvent.ONAUTHENTICATE* -
+
+*TorControlEvent.ONRESPONSE* -	
+
+*TorControlEvent.TOR_DEBUG* -
+		/**
+		 * Dispatched whenever the Tor control connection signals an asynchronous "INFO" event. [NOT YET IMPLEMENTED]
+		 */
+		public static const TOR_INFO:String = "Event.TorControlEvent.ONEVENT.TOR_INFO";
+		/**
+		 * Dispatched whenever the Tor control connection signals an asynchronous "NOTICE" event. [NOT YET IMPLEMENTED]
+		 */
+		public static const TOR_NOTICE:String = "Event.TorControlEvent.ONEVENT.TOR_NOTICE";
+		/**
+		 * Dispatched whenever the Tor control connection signals an asynchronous "WARN" event. [NOT YET IMPLEMENTED]
+		 */
+		public static const TOR_WARN:String = "Event.TorControlEvent.ONEVENT.TOR_WARN";
+		/**
+		 * Dispatched whenever the Tor control connection signals an asynchronous "ERR" event. [NOT YET IMPLEMENTED]
+		 */
+		public static const TOR_ERR:String = "Event.TorControlEvent.ONEVENT.TOR_ERR";
+		/**
+		 * Dispatched whenever the Tor control connection signals an asynchronous "CIRC" event. [NOT YET IMPLEMENTED]
+		 */
+		public static const TOR_CIRC:String = "Event.TorControlEvent.ONEVENT.TOR_CIRC";
+		/**
+		 * Dispatched whenever the Tor control connection signals an asynchronous "STREAM" event. [NOT YET IMPLEMENTED]
+		 */
+		public static const TOR_STREAM:String = "Event.TorControlEvent.ONEVENT.TOR_STREAM";
+		/**
+		 * Dispatched whenever the Tor control connection signals an asynchronous "ORCONN" event. [NOT YET IMPLEMENTED]
+		 */
+		public static const TOR_ORCONN:String = "Event.TorControlEvent.ONEVENT.TOR_ORCONN";			
+		/**
+		 * Dispatched whenever the Tor control connection signals an asynchronous "BW" event. [NOT YET IMPLEMENTED]
+		 */
+		public static const TOR_BW:String = "Event.TorControlEvent.ONEVENT.TOR_BW";	
+		/**
+		 * Dispatched whenever the Tor control connection signals an asynchronous "NEWDESC" event. [NOT YET IMPLEMENTED]
+		 */
+		public static const TOR_NEWDESC:String = "Event.TorControlEvent.ONEVENT.TOR_NEWDESC";	
+		/**
+		 * Dispatched whenever the Tor control connection signals an asynchronous "ADDRMAP" event. [NOT YET IMPLEMENTED]
+		 */
+		public static const TOR_ADDRMAP:String = "Event.TorControlEvent.ONEVENT.TOR_ADDRMAP";	
+		/**
+		 * Dispatched whenever the Tor control connection signals an asynchronous "AUTHDIR_NEWDESCS" event. [NOT YET IMPLEMENTED]
+		 */
+		public static const TOR_AUTHDIR_NEWDESCS:String = "Event.TorControlEvent.ONEVENT.TOR_AUTHDIR_NEWDESCS";
+		/**
+		 * Dispatched whenever the Tor control connection signals an asynchronous "DESCCHANGED" event. [NOT YET IMPLEMENTED]
+		 */
+		public static const TOR_DESCCHANGED:String = "Event.TorControlEvent.ONEVENT.TOR_DESCCHANGED";
+
+----
+
+= SOCKS5Tunnel Events =
+
+The following events are broadcast by the SOCKS5Tunnel instance:
