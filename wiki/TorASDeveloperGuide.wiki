@@ -160,6 +160,8 @@ Additionally, the following method is not yet supported:
 
 *useRedirectURL*
 
+HTTPS requests are not supported at this time.
+
 Once the request has been properly constructed, it is used as the parameter for the loadHTTP method of the SOCKS5Tunnel instance:
 
 {{{
