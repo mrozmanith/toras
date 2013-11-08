@@ -1,6 +1,33 @@
 #summary TorAS Events Reference
 #labels TorAS,ActionScript,events
 
+TorAS uses the standard ActionScript event model, so setting up listeners to TorControl or SOCKS5Tunnel instances is straightforward:
+
+{{{
+var torControl:TorControl=new TorControl();
+torControl.addEventListener(TorControlEvent.ONAUTHENTICATE, this.onTorReady);
+torControl.connect();
+
+function onTorReady(eventObj:TorControlEvent):void {
+   trace ("Tor control connection is authenticated and ready.");
+}
+}}}
+
+{{{
+var tunnel:SOCK5Tunnel = new SOCKS5Tunnel();
+tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPRESPONSE, onSOCKSTunnelResponse);
+tunnel.loadHTTP(request);       
+
+function onSOCKSTunnelResponse(eventObj:SOCKS5TunnelEvent):void {
+   trace ("Got response: ");
+   trace (eventObj.httpResponse.body);
+}
+}}}
+
+Additional examples can be found in the TorAS Developer document: https://code.google.com/p/toras/wiki/TorASDeveloperGuide
+
+----
+
 = TorControl Events =
 
 The following events are broadcast by the TorControl instance:
