@@ -3,9 +3,7 @@
 
 = TorControl Events =
 
-The following events are broadcast by the TorControl instance:
-
-*`TorControlEvent.ONLOGMSG`* - Dispatched whenever TorControl receives a Tor log message via STDOUT. This type of message will only ever be received if TorControl is used to start the Tor process. The Tor log message will be included in the event's _body_ property.
+The following events are broadcast by the TorControl instance synchronously (as a result of an action):
 
 
 *`TorControlEvent.ONCONNECT`* - Dispatched when the TorControl instance successfully connects to what is believed to be a Tor control socket. Until the ONAUTHENTICATE event is dispatched (and verified as a Tor connection), the socket is considered unavailable.
@@ -19,11 +17,14 @@ The following events are broadcast by the TorControl instance:
  
 *`TorControlEvent.ONRESPONSE`* - Dispatched when the Tor control connection responds to a synchronous response (for example, a _sendRawControlMessage_ call). The parsed response body will be included in the event's _body_ property, the response status code (similar to HTTP response status codes) will be included as the _status_ property, and the raw (unparsed) response will be included as the _rawMessage_ property.
  
-=== Asynchronous Tor Control Events ===
+=== Asynchronous Tor Events ===
 
-The following events are dispatched by the Tor process. Although TorAS listens to and dispatches these events to any listeners, it's not responsible for the contents of these events.
+The following events are dispatched by the Tor process autonomously. Although TorAS dynamically binds to these events whenever listeners are assigned, it is not responsible for the event contents that Tor includes (the event _body_ property, for example).
 
 For detailed information on the contents of each of the following Tor events, please see section 4 of the Tor Control Protocol v1 Specification: https://code.google.com/p/toras/wiki/TorControlProtocol_v1
+
+*`TorControlEvent.ONLOGMSG`* - Dispatched whenever TorControl receives a Tor log message via STDOUT. This type of message will only ever be received if TorControl is used to start the Tor process. The Tor log message will be included in the event's _body_ property.
+
 
 *`TorControlEvent.TOR_DEBUG`* - Dispatched when the Tor process dispatches an internal "DEBUG" event.
 
