@@ -18,7 +18,6 @@ package org.torproject {
 	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
 	import org.torproject.utils.URLUtil;	
-	import org.torproject.TorControl;	
 	
 	/**
 	 * Provides SOCKS5-capable transport services for proxied network requests. This protocol is also used by Tor to transport
@@ -31,6 +30,8 @@ package org.torproject {
 	 */
 	public class SOCKS5Tunnel extends EventDispatcher {
 		
+		public static const defaultSOCKSIP:String = "127.0.0.1";
+		public static const defaultSOCKSPort:int = 1080;
 		private var _tunnelSocket:Socket = null;
 		private var _tunnelIP:String = null;
 		private var _tunnelPort:int = -1;
@@ -49,15 +50,15 @@ package org.torproject {
 		/**
 		 * Creates an instance of a SOCKS5 proxy tunnel.
 		 * 
-		 * @param	tunnelIP The SOCKS proxy IP to use. If not specified, the current settings in TorControl are used by default.
-		 * @param	tunnelPort The SOCKS proxy port to use. If not specified, the current settings in TorControl are used by default.
+		 * @param	tunnelIP The SOCKS proxy IP to use. If not specified, the current static constant values are used by default.
+		 * @param	tunnelPort The SOCKS proxy port to use. If not specified, the current static constant values are used by default.
 		 */
 		public function SOCKS5Tunnel(tunnelIP:String=null, tunnelPort:int=-1) {
 			if ((tunnelIP == null) || (tunnelIP == "")) {
-				this._tunnelIP = TorControl.SOCKSIP;
+				this._tunnelIP = defaultSOCKSIP;
 			}//if
 			if (tunnelPort < 1) {
-				this._tunnelPort = TorControl.SOCKSPort;
+				this._tunnelPort = defaultSOCKSPort;
 			}//if
 		}//constructor
 		
