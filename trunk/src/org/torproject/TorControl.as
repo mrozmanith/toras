@@ -14,6 +14,7 @@ package org.torproject  {
 	import flash.desktop.NativeProcessStartupInfo;
 	import org.torproject.events.TorControlEvent;
 	import org.torproject.model.TorControlModel;
+	import org.torproject.model.TorASError;
 	import flash.utils.setTimeout;	
 	
 	/**
@@ -146,7 +147,7 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 					_socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, this.onConnectSecurityError);
 					_socket.addEventListener(ProgressEvent.SOCKET_DATA, this.onData);						
 				} catch (err:*) {
-					trace (err);
+					trace ("TorControl.connect exception: "+err);
 				}//catch
 			} else {				
 			}//else
@@ -215,8 +216,7 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 					torProcess.addEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, this.onStandardOutData);
 					torProcess.start(launchInfo);
 					NativeApplication.nativeApplication.addEventListener(Event.EXITING, this.stopTorProcess);
-				} catch (err:*) {
-					trace ("TorControl.launchTorProcess > Exception thrown: "+err);
+				} catch (err:*) {					
 				}//catch
 			} else {
 				trace ("TorControl.launchTorProcess > NativeProcess is not supported. Tor must be started manually.");
@@ -236,7 +236,6 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 				if (torProcess == null) {
 					return;
 				}//if
-				trace ("TorControl > Shutting down Tor process...");
 				this.sendRawControlMessage(TorControlModel.getControlMessage("shutdown")); 
 			} catch (err:*) {				
 			}//catch
@@ -322,8 +321,7 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		 * 
 		 * @param	eventObj An Event object.
 		 */
-		private function onConnect(eventObj:Event):void {
-			trace ("TorControl.onConnect >> Connected to Tor control socket at " + _controlIP + ":" + _controlPort);
+		private function onConnect(eventObj:Event):void {			
 			_connected = true;
 			this.dispatchEvent(new TorControlEvent(TorControlEvent.ONCONNECT));
 			this.authenticate();
@@ -334,13 +332,12 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		 * 
 		 * @param	eventObj An IOErrorEvent object.
 		 */
-		private function onConnectError(eventObj:IOErrorEvent):void {
-			trace ("TorControl.onConnectError >> Couldn't connect to Tor control socket at " + _controlIP + ":" + _controlPort+": "+ eventObj.toString());
+		private function onConnectError(eventObj:IOErrorEvent):void {			
 			_connected = false;
 			var errorEventObj:TorControlEvent = new TorControlEvent(TorControlEvent.ONCONNECTERROR);
-			errorEventObj.status = eventObj.errorID;			
-			errorEventObj.body = eventObj.toString();
-			errorEventObj.rawMessage = eventObj.toString();
+			errorEventObj.error = new TorASError(eventObj.toString());
+			errorEventObj.error.status = eventObj.errorID;						
+			errorEventObj.error.rawMessage = eventObj.toString();
 			this.dispatchEvent(errorEventObj);
 		}//onConnectError
 		
@@ -349,13 +346,12 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		 * 
 		 * @param	eventObj An SecurityErrorEvent object.
 		 */
-		private function onConnectSecurityError(eventObj:IOErrorEvent):void {
-			trace ("TorControl.onConnectSecurityError >> Couldn't connect to Tor control socket at " + _controlIP + ":" + _controlPort+": "+ eventObj.toString());
+		private function onConnectSecurityError(eventObj:IOErrorEvent):void {			
 			_connected = false;
 			var errorEventObj:TorControlEvent = new TorControlEvent(TorControlEvent.ONCONNECTERROR);
-			errorEventObj.status = eventObj.errorID;			
-			errorEventObj.body = eventObj.toString();
-			errorEventObj.rawMessage = eventObj.toString();
+			errorEventObj.error = new TorASError(eventObj.toString());
+			errorEventObj.error.status = eventObj.errorID;									
+			errorEventObj.error.rawMessage = eventObj.toString();
 			this.dispatchEvent(errorEventObj);
 		}//onConnectSecurityError
 		
@@ -391,8 +387,7 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		override public function addEventListener(type:String, listener:Function, useCapture:Boolean = false, priority:int = 0, useWeakReference:Boolean = false):void {
 			var torEventType:String = null;
 			if (TorControlEvent.isTorEvent(type)) {
-				var torEventShortCode:String = TorControlEvent.getTorEventShortcode(type);
-				trace ("Enabling tor event: " + type + " using shortcode \"" + torEventShortCode + "\"");
+				var torEventShortCode:String = TorControlEvent.getTorEventShortcode(type);				
 				this.enableTorEvent(torEventShortCode);
 			}//if
 			super.addEventListener(type, listener, useCapture, priority, useWeakReference);			
@@ -411,8 +406,7 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 				return;
 			}//if
 			var torMessage:String = TorControlModel.getControlMessage("enableevent");
-			this.addUniqueAsyncEvent(eventType);
-			trace ("TorControl.enableTorEvent > " + eventType + " -- Active events: " + this.enabledAsyncEventList);
+			this.addUniqueAsyncEvent(eventType);			
 			torMessage = this.replaceMeta(torMessage, "%event_list%", this.enabledAsyncEventList);
 			this.sendRawControlMessage(torMessage);
 		}//enableTorEvent
@@ -427,8 +421,7 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		 */
 		private function disableTorEvent(eventType:String):void {
 			var torMessage:String = TorControlModel.getControlMessage("enableevent");
-			this.removeAsyncEvent(eventType);
-			trace ("TorControl.disableTorEvent > " + eventType + " -- Active events: " + this.enabledAsyncEventList);
+			this.removeAsyncEvent(eventType);			
 			torMessage = this.replaceMeta(torMessage, "%event_list%", this.enabledAsyncEventList);
 			this.sendRawControlMessage(torMessage);
 		}//disableTorEvent
@@ -438,8 +431,7 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		 */
 		private function disableAllTorEvents():void {
 			var torMessage:String = TorControlModel.getControlMessage("enableevent");
-			 this._enabledEvents = new Array();
-			trace ("TorControl.disableAllTorEvents > Active events: " + this.enabledAsyncEventList);
+			 this._enabledEvents = new Array();			
 			torMessage = this.replaceMeta(torMessage, "%event_list%", this.enabledAsyncEventList);
 			this.sendRawControlMessage(torMessage);
 		}//disableAllTorEvents

@@ -2,6 +2,7 @@ package org.torproject.events {
 	
 	import flash.events.Event;
 	import org.torproject.model.HTTPResponse;
+	import org.torproject.model.TorASError;
 	import flash.utils.ByteArray;
 	
 	/**
@@ -38,6 +39,15 @@ package org.torproject.events {
 		 */
 		public static const ONCONNECT:String = "Event.SOCKS5TunnelEvent.ONCONNECT";
 		/**
+		 * Dispatched when the SOCKS5Tunnel instance experiences an error in connecting to the tunnel socket.
+		 */
+		public static const ONCONNECTERROR:String = "Event.SOCKS5TunnelEvent.ONCONNECTERROR";
+		/**
+		 * Dispatched when the SOCKS5Tunnel instance successfully authenticates the tunnel socket. Tunnel requests
+		 * are available after this event is dispatched.
+		 */
+		public static const ONAUTHENTICATE:String = "Event.SOCKS5TunnelEvent.ONAUTHENTICATE";
+		/**
 		 * Dispatched when the SOCKS5Tunnel instance disconnects from the tunnel socket.
 		 */
 		public static const ONDISCONNECT:String = "Event.SOCKS5TunnelEvent.ONDISCONNECT";
@@ -46,6 +56,11 @@ package org.torproject.events {
 		 * In a typical response, status would be parsed first, followed by headers, and finally by this event.
 		 */
 		public static const ONHTTPRESPONSE:String = "Event.SOCKS5TunnelEvent.ONHTTPRESPONSE";
+		/**
+		 * Dispatched when the SOCKS5Tunnel instance receives a 301 or 302 (redirect) HTTP response and the URLRequest
+		 * used to initiate the request includes the followRedirects property as true.
+		 */
+		public static const ONHTTPREDIRECT:String = "Event.SOCKS5TunnelEvent.ONHTTPREDIRECT";
 		/**
 		 * Dispatched when the SOCKS5Tunnel instance receives enough information to parse HTTP headers from a response.
 		 * In a typical response, status would be parsed first, followed by headers, and finally by the ONHTTPRESPONSE event.
@@ -57,7 +72,8 @@ package org.torproject.events {
 		 */
 		public static const ONHTTPSTATUS:String = "Event.SOCKS5TunnelEvent.ONHTTPSTATUS";
 		
-		public var httpResponse:HTTPResponse = null;	
+		public var httpResponse:HTTPResponse = null;
+		public var error:TorASError = null;
 		
 		public function SOCKS5TunnelEvent(p_type:String, p_bubbles:Boolean=false, p_cancelable:Boolean=false) {
 			super(p_type, p_bubbles, p_cancelable);

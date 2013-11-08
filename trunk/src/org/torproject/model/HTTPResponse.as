@@ -96,12 +96,15 @@ package org.torproject.model {
 				rawResponseData.position = 0;
 				this._headers = new Vector.<HTTPResponseHeader>();
 				var responseString:String = rawResponseData.readMultiByte(rawResponseData.length, this.charSet);
-				var headerLines:Array = responseString.split(CRLF);
+				var responseHeader:String = responseString.split(doubleCRLF)[0] as String;
+				var headerLines:Array = responseHeader.split(CRLF);
 				//Start at 1 since 0 is the status line
 				for (var count:uint = 1; count < headerLines.length; count++) {
-					var currentHeaderText:String = headerLines[count] as String;
+					var currentHeaderText:String = headerLines[count] as String;					
 					var newHeader:HTTPResponseHeader = new HTTPResponseHeader(currentHeaderText);
-					this._headers.push(newHeader);
+					if (newHeader.name!="") {
+						this._headers.push(newHeader);
+					}//if
 				}//for				
 				return (true);
 			} catch (err:*) {
