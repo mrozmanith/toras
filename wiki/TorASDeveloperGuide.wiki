@@ -204,3 +204,5 @@ function onSOCKSTunnelResponse(eventObj:SOCKS5TunnelEvent):void {
    trace (eventObj.httpResponse.body);
 }
 }}}
+
+Additional events are provided by the SOCKS5Tunnel class that you can include for greater control and insight: http://code.google.com/p/toras/wiki/TorASEvents
