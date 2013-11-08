@@ -7,19 +7,19 @@ The following events are broadcast by the TorControl instance:
 
 *TorControlEvent.ONLOGMSG* - Dispatched whenever TorControl receives a Tor log message via STDOUT. This type of message will only ever be received if TorControl is used to start the Tor process. The Tor log message will be included in the event's _body_ property.
 
-*TorControlEvent.ONCONNECT* -
-
-*TorControlEvent.ONCONNECTERROR* - 
-
-*TorControlEvent.ONAUTHENTICATE* -
-
-*TorControlEvent.ONRESPONSE* -	
-
-*TorControlEvent.TOR_DEBUG* -
-		/**
-		 * Dispatched whenever the Tor control connection signals an asynchronous "INFO" event. [NOT YET IMPLEMENTED]
-		 */
-		public static const TOR_INFO:String = "Event.TorControlEvent.ONEVENT.TOR_INFO";
+ *TorControlEvent.ONCONNECT* -
+ 
+ *TorControlEvent.ONCONNECTERROR* - 
+ 
+ *TorControlEvent.ONAUTHENTICATE* -
+ 
+ *TorControlEvent.ONRESPONSE* -	
+ 
+ *TorControlEvent.TOR_DEBUG* -
+ 		/**
+ 		 * Dispatched whenever the Tor control connection  signals an asynchronous "INFO" event. [NOT YET IMPLEMENTED]
+ 		 */
+ 		public static const TOR_INFO:String =  "Event.TorControlEvent.ONEVENT.TOR_INFO";
 		/**
 		 * Dispatched whenever the Tor control connection signals an asynchronous "NOTICE" event. [NOT YET IMPLEMENTED]
 		 */
