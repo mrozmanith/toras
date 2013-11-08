@@ -26,41 +26,42 @@ For detailed information on the contents of each of the following Tor events, pl
 *`TorControlEvent.ONLOGMSG`* - Dispatched whenever TorControl receives a Tor log message via STDOUT. This type of message will only ever be received if TorControl is used to start the Tor process. The Tor log message will be included in the event's _body_ property.
 
 
-*`TorControlEvent.TOR_DEBUG`* - Dispatched when the Tor process dispatches an internal "DEBUG" event.
+*`TorControlEvent.TOR_DEBUG`* - Dispatched when the Tor process dispatches an internal "DEBUG" event. The details of the event are included in the event object's _body_ property, and the raw (un-parsed) data received in the event is in the _rawMessage_ property. The Tor event name that was captured is included in the _torEvent_ property.
 
 
-*`TorControlEvent.TOR_INFO`* -
+*`TorControlEvent.TOR_INFO`* - Dispatched when the Tor process dispatches an internal "INFO" event. The details of the event are included in the event object's _body_ property, and the raw (un-parsed) data received in the event is in the _rawMessage_ property. The Tor event name that was captured is included in the _torEvent_ property.
 
 
-*`TorControlEvent.TOR_NOTICE`* -
+*`TorControlEvent.TOR_NOTICE`* - Dispatched when the Tor process dispatches an internal "NOTICE" event. The details of the event are included in the event object's _body_ property, and the raw (un-parsed) data received in the event is in the _rawMessage_ property. The Tor event name that was captured is included in the _torEvent_ property.
 
 
-*`TorControlEvent.TOR_WARN`* -
+*`TorControlEvent.TOR_WARN`* - Dispatched when the Tor process dispatches an internal "WARN" event. The details of the event are included in the event object's _body_ property, and the raw (un-parsed) data received in the event is in the _rawMessage_ property. The Tor event name that was captured is included in the _torEvent_ property.
 
 
-*`TorControlEvent.TOR_ERR`* -
+*`TorControlEvent.TOR_ERR`* - Dispatched when the Tor process dispatches an internal "ERR" event. The details of the event are included in the event object's _body_ property, and the raw (un-parsed) data received in the event is in the _rawMessage_ property. The Tor event name that was captured is included in the _torEvent_ property.
 
 
-*`TorControlEvent.TOR_CIRC`* -
+*`TorControlEvent.TOR_CIRC`* - Dispatched when the Tor process dispatches an internal "CIRC" event. The details of the event are included in the event object's _body_ property, and the raw (un-parsed) data received in the event is in the _rawMessage_ property. The Tor event name that was captured is included in the _torEvent_ property.
 
 
-*`TorControlEvent.TOR_STREAM`* -
+*`TorControlEvent.TOR_STREAM`* - Dispatched when the Tor process dispatches an internal "STREAM" event. The details of the event are included in the event object's _body_ property, and the raw (un-parsed) data received in the event is in the _rawMessage_ property. The Tor event name that was captured is included in the _torEvent_ property.
 
 
-*`TorControlEvent.TOR_ORCONN`* -
+*`TorControlEvent.TOR_ORCONN`* - Dispatched when the Tor process dispatches an internal "ORCONN" event. The details of the event are included in the event object's _body_ property, and the raw (un-parsed) data received in the event is in the _rawMessage_ property. The Tor event name that was captured is included in the _torEvent_ property.
 
 
-*`TorControlEvent.TOR_BW`* -
+*`TorControlEvent.TOR_BW`* - Dispatched when the Tor process dispatches an internal "BW" event. The details of the event are included in the event object's _body_ property, and the raw (un-parsed) data received in the event is in the _rawMessage_ property. The Tor event name that was captured is included in the _torEvent_ property.
 
 
-*`TorControlEvent.TOR_NEWDESC`* -
+*`TorControlEvent.TOR_NEWDESC`* - Dispatched when the Tor process dispatches an internal "NEWDESC" event. The details of the event are included in the event object's _body_ property, and the raw (un-parsed) data received in the event is in the _rawMessage_ property. The Tor event name that was captured is included in the _torEvent_ property.
 
 
-*`TorControlEvent.TOR_AUTHDIR_NEWDESCS`* -
+*`TorControlEvent.TOR_AUTHDIR_NEWDESCS`* - Dispatched when the Tor process dispatches an internal "AUTHDIR_NEWDESCS" event. The details of the event are included in the event object's _body_ property, and the raw (un-parsed) data received in the event is in the _rawMessage_ property. The Tor event name that was captured is included in the _torEvent_ property.
 
 
-*`TorControlEvent.TOR_DESCCHANGED`* -
+*`TorControlEvent.TOR_DESCCHANGED`* - Dispatched when the Tor process dispatches an internal "DESCCHANGED" event. The details of the event are included in the event object's _body_ property, and the raw (un-parsed) data received in the event is in the _rawMessage_ property. The Tor event name that was captured is included in the _torEvent_ property.
 
+,,There are a number of additional asynchronous events that Tor dispatches which are not currently supported by TorAS. Since these include a variety of optional parameters, they have been excluded until a suitable way to include these parameters has been developed (so yes, they will be supported at some point).,,
 
 ----
 
