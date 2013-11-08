@@ -7,15 +7,15 @@ The following events are broadcast by the TorControl instance:
 
 *TorControlEvent.ONLOGMSG* - Dispatched whenever TorControl receives a Tor log message via STDOUT. This type of message will only ever be received if TorControl is used to start the Tor process. The Tor log message will be included in the event's _body_ property.
 
- *TorControlEvent.ONCONNECT* -
+ * *TorControlEvent.ONCONNECT* -
  
- *TorControlEvent.ONCONNECTERROR* - 
+ * *TorControlEvent.ONCONNECTERROR* - 
  
- *TorControlEvent.ONAUTHENTICATE* -
+ * *TorControlEvent.ONAUTHENTICATE* -
  
- *TorControlEvent.ONRESPONSE* -	
+ * *TorControlEvent.ONRESPONSE* -	
  
- *TorControlEvent.TOR_DEBUG* -
+ * *TorControlEvent.TOR_DEBUG* -
  		/**
  		 * Dispatched whenever the Tor control connection  signals an asynchronous "INFO" event. [NOT YET IMPLEMENTED]
  		 */
