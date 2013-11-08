@@ -166,7 +166,8 @@ Once the request has been properly constructed, it is used as the parameter for 
 import org.torproject.SOCKS5Tunnel;
 import org.torproject.events.SOCKS5TunnelEvent
 
-var tunnel:SOCK5Tunnel = new SOCKS5Tunnel();		tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPRESPONSE, onSOCKSTunnelResponse);
+var tunnel:SOCK5Tunnel = new SOCKS5Tunnel();
+tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPRESPONSE, onSOCKSTunnelResponse);
 tunnel.loadHTTP(request);	
 
 function onSOCKSTunnelResponse(eventObj:SOCKS5TunnelEvent):void {
