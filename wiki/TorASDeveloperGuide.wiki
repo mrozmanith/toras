@@ -141,7 +141,7 @@ The SOCKS5Tunnel class crates the SOCKS5 tunnel which the Tor communication chan
 
 The most common type of request via a SOCKS5Tunnel is the HTTP request, similar to ActionScript's URLLoader class. SOCKS5Tunnel uses the URLRequest class to determine which server to communicate with, what data to include with the request. You would create a URLRequest instance in exactly the same way you would for a URLLoader instance:
 
-{{
+{{{
 import import flash.net.URLRequest;
 import import flash.net.URLVariables;
 
@@ -150,7 +150,7 @@ var variables:URLVariables=new URLVariables();
 vairables.userName="Patrick";
 variables.password="pass123";
 request.data=variables;
-}}
+}}}
 
 Not all properties or a URLRequest instance are supported by TorAS (yet!) These include:
 
