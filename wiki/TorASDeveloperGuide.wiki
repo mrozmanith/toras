@@ -9,9 +9,10 @@ For this reason, TorAS comes with a number of default settings and pre-configura
 
 It is assumed that developers using TorAS have some knowledge with ActionScript (creating class instances, calling methods, working with data, etc.)
 
-Additionally, while TorAS provides a simplified way to access the Tor services, developers should refer to the Tor Protocol Specification for a complete and authoritative source of information:
+Additionally, while TorAS provides a simplified way to access the Tor services, developers can gain additional low-level control by issuing direct commands to the Tor control and communication sockets. For more information, refer to the following documents:
 
-http://code.google.com/p/toras/wiki/TorProtocolSpecification_v1
+https://code.google.com/p/toras/wiki/TorControlProtocol_v1
+https://code.google.com/p/toras/wiki/TorProtocolSpecification
 
 = Configuration =
 
