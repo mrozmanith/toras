@@ -19,7 +19,7 @@ Category: Standards Track                                       M. Ganis
                                                               March 1996
 
 
-                        *SOCKS Protocol Version 5*
+* SOCKS Protocol Version 5 *
 
 Status of this Memo
 
