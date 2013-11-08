@@ -5,7 +5,7 @@ TorAS uses the standard ActionScript event model, so setting up listeners to Tor
 
 {{{
 var torControl:TorControl=new TorControl();
-torControl.addEventListener(TorControlEvent.ONAUTHENTICATE, this.onTorReady);
+torControl.addEventListener(TorControlEvent.ONAUTHENTICATE, onTorReady);
 torControl.connect();
 
 function onTorReady(eventObj:TorControlEvent):void {
