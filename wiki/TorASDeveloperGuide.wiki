@@ -13,6 +13,8 @@ Additionally, while TorAS provides a simplified way to access the Tor services, 
 
 https://code.google.com/p/toras/wiki/TorControlProtocol_v1
 
+https://code.google.com/p/toras/wiki/SOCKS5ProtocolSpecification
+
 https://code.google.com/p/toras/wiki/TorProtocolSpecification
 
 = Configuration =
