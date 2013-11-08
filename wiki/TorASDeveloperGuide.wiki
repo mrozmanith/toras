@@ -131,7 +131,7 @@ function onTorReady(eventObj:TorControlEvent):void {
 
 = Communicating through Tor =
 
-As mentioned in the previous section, it is not necessary to use TorControl to start the Tor service. If you have already started it and have noted the SOCKS IP and port settings, you can communicate through Tor's proxy using a SOCKS5 "tunnel". Because the running Tor service provides both control and communication connections as independent services, TorAS' SOCKS5Tunnel and TorControl are also independent and each can be used without the other.
+As mentioned in the previous section, it is not necessary to use TorControl to start the Tor service. If you have already started it and have noted the SOCKS IP and port settings, you can communicate through Tor's proxy using a SOCKS5 "tunnel". Because the running Tor process provides both control and communication connections as independent services, TorAS' SOCKS5Tunnel and TorControl are also independent and each can be used without the other.
 
 The SOCKS5Tunnel class crates the SOCKS5 tunnel which the Tor communication channel (circuit) uses to proxy requests. Each request is encrypted and sent through the Tor network until reaching an "exit node" which performs the actual request and response. For all requests, TorAS uses Tor's internal DNS resolution mechanism which adds extra security by not exposing domain lookups.
 
