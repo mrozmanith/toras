@@ -3,7 +3,7 @@
 
 = TorControl Events =
 
-The following events are broadcast by the TorControl instance synchronously (as a result of an action):
+The following events are broadcast by the TorControl instance:
 
 
 *`TorControlEvent.ONCONNECT`* - Dispatched when the TorControl instance successfully connects to what is believed to be a Tor control socket. Until the ONAUTHENTICATE event is dispatched (and verified as a Tor connection), the socket is considered unavailable.
@@ -61,10 +61,31 @@ For detailed information on the contents of each of the following Tor events, pl
 
 *`TorControlEvent.TOR_DESCCHANGED`* - Dispatched when the Tor process dispatches an internal "DESCCHANGED" event. The details of the event are included in the event object's _body_ property, and the raw (un-parsed) data received in the event is in the _rawMessage_ property. The Tor event name that was captured is included in the _torEvent_ property.
 
-,,There are a number of additional asynchronous events that Tor dispatches which are not currently supported by TorAS. Since these include a variety of optional parameters, they have been excluded until a suitable way to include these parameters has been developed (so yes, they will be supported at some point).,,
+,,There are a number of additional asynchronous events that Tor dispatches which are not currently supported by TorAS. Since these support a variety of optional parameters, they have been excluded until a suitable way to include these parameters has been developed (so yes, they will be supported at some point).,,
 
 ----
 
 = SOCKS5Tunnel Events =
 
 The following events are broadcast by the SOCKS5Tunnel instance:
+
+
+*`SOCKS5Tunnel.ONCONNECT`* - Dispatched when the SOCKS5Tunnel instance successfully connects to what is believed to be a Tor communications (SOCKS5) socket. During most successful requests, ONCONNECT is dispatched first, followed by ONAUTHENTICATE.
+
+ 
+*`SOCKS5Tunnel.ONCONNECTERROR`* - Dispatched when the SOCKS5Tunnel instance experiences an error connecting to the Tor control socket. 
+
+
+*`SOCKS5Tunnel.ONDISCONNECT`* - Dispatched when the SOCKS5Tunnel socket disconnects, either as the result of a local action, or because the connection was dropped remotely.
+
+ 
+*`SOCKS5Tunnel.ONAUTHENTICATE`* - Dispatched when the SOCKS5 tunnel connection has been authenticated and is ready to receive commands. Most of the time this event is followed by the actual tunneled request itself.
+
+ 
+*`SOCKS5Tunnel.ONHTTPSTATUS`* - Dispatched when the SOCKS5 tunnel has received enough information from a _loadHTTP_ call to parse the response status information. This includes items like the response status code (200, 301, 404, etc.), protocol ("HTTP/1.1", for example), and status information string, which are included in the event's _httpResponse_ object.
+
+ 
+*`SOCKS5Tunnel.ONHTTPHEADERS`* - Dispatched when the SOCKS5 tunnel has received enough information from a _loadHTTP_ call to parse the response header. Typically this will follow an ONHTTPSTATUS event and will include the parsed header information in the event's _httpResponse.headers_ property (a vector array of _HTTPResponseHeader_ objects).
+
+ 
+*`SOCKS5Tunnel.ONHTTPRESPONSE`* - Dispatched when the SOCKS5 tunnel connection has fully completed receiving the entire HTTP response from a _loadHTTP_ call. All of the event's _httpResponse_ object's properties should now contain valid information from the response. Note that not all responses include a response body (for example, a 302 redirect).
