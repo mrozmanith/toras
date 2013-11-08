@@ -1,11 +1,9 @@
-#summary Tor v1 Control Protocol Specification
+#summary Tor Control Protocol v1 Specification
 #labels Tor,control,protocol,specification
 
 For the authoritative Tor control protocol specification document, please visit: https://gitweb.torproject.org/torspec.git?a=blob_plain;hb=HEAD;f=control-spec.txt
 
----
-
-                   TC: A Tor control protocol (Version 1)
+= TC: A Tor control protocol (Version 1) =
 
 0. Scope
 
