@@ -3,6 +3,7 @@ package  {
 	import flash.display.MovieClip;
 	import flash.events.Event;
 	import org.torproject.events.TorControlEvent;
+	import org.torproject.model.HTTPResponseHeader;
 	import org.torproject.TorControl;
 	import org.torproject.events.SOCKS5TunnelEvent
 	import org.torproject.SOCKS5Tunnel;
@@ -57,37 +58,63 @@ package  {
 		}
 				
 		
-		private function onSOCKSTunnelResponse(eventObj:SOCKS5TunnelEvent):void {
-			trace ("Loaded via Tor:");
+		private function onHTTPResponse(eventObj:SOCKS5TunnelEvent):void {
+			trace ("--------------------------------------------------------");
+			trace ("Loaded via Tor from http://www.google.com/: ");
+			trace(" ");
+			trace ("STATUS: " + eventObj.httpResponse.statusCode + " " + eventObj.httpResponse.status);
+			trace(" ");
+			trace ("HEADERS: ");
+			trace(" ");
+			for (var count:uint = 0; count < eventObj.httpResponse.headers.length; count++) {
+				var httpHeader:HTTPResponseHeader = eventObj.httpResponse.headers[count];
+				trace (httpHeader.name + ": " + httpHeader.value);
+			}//for
+			trace(" ");			
+			trace ("RESPONSE BODY: ");
+			trace(" ");
 			trace (eventObj.httpResponse.body);		
+			trace ("--------------------------------------------------------");
+		}
+		
+		private function onHTTPRedirect(eventObj:SOCKS5TunnelEvent):void {
+			trace ("Received HTTP redirect error " + eventObj.httpResponse.statusCode);
+			trace ("Redirecting to: " + SOCKS5Tunnel(eventObj.target).activeRequest.url);
+		}
+		
+		private function onSOCKS5TunnelDisconnect(eventObj:SOCKS5TunnelEvent):void {
+			trace ("SOCKS5 tunnel disconnected.");			
 		}
 		
 		private function onTorLogMessage(eventObj:TorControlEvent):void {
+			//STDOUT log from Tor -- only available if we're launching the process using TorControl
 			trace (TorControl.executable + " > "+eventObj.rawMessage);
 		}
 		
-		private function onTorDEBUGMessage(eventObj:TorControlEvent):void {
-			trace ("Tor DEBUG event: "+eventObj.body);
+		private function onTorWARNMessage(eventObj:TorControlEvent):void {
+	//		trace ("Tor WARN event: "+eventObj.body);
 		}
 		
 		private function onTorINFOMessage(eventObj:TorControlEvent):void {
-			trace ("Tor INFO event: "+eventObj.body);
+	//		trace ("Tor INFO event: "+eventObj.body);
 		}
 		
 		private function onTorNOTICEMessage(eventObj:TorControlEvent):void {
-			trace ("Tor NOTICE event: "+eventObj.body);
+		//	trace ("Tor NOTICE event: "+eventObj.body);
 		}
 				
 		private function onTorControlReady(eventObj:TorControlEvent):void {
 			trace ("Main.as > TorControl is connected, authenticated, and ready for commands.");
 			//Listen for some internal Tor events...
 			torControl.addEventListener(TorControlEvent.TOR_INFO, this.onTorINFOMessage);
-			torControl.addEventListener(TorControlEvent.TOR_DEBUG, this.onTorDEBUGMessage);
+			torControl.addEventListener(TorControlEvent.TOR_WARN, this.onTorWARNMessage);
 			torControl.addEventListener(TorControlEvent.TOR_NOTICE, this.onTorNOTICEMessage);			
 			//Create an anonymous tunnel connection for streaming HTTP requests through Tor...
 			this.tunnel = new SOCKS5Tunnel();
 			var proxyRequest:URLRequest = new URLRequest("http://www.google.com/");
-			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPRESPONSE, this.onSOCKSTunnelResponse);
+			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPRESPONSE, this.onHTTPResponse);
+			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPREDIRECT, this.onHTTPRedirect);
+			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONDISCONNECT, this.onSOCKS5TunnelDisconnect);
 			this.tunnel.loadHTTP(proxyRequest);			
 		}
 		

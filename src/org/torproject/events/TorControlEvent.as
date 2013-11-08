@@ -1,5 +1,7 @@
 package org.torproject.events {
+	
 	import flash.events.Event;
+	import org.torproject.model.TorASError;
 	
 	/**
 	 * Contains data and information from various events raised within a TorControl instance.
@@ -48,8 +50,8 @@ package org.torproject.events {
 		 */
 		public static const ONAUTHENTICATE:String = "Event.TorControlEvent.ONAUTHENTICATE";
 		/**
-		 * Dispatched whenever the Tor control connection replies with a synchronous response. For asynchronous events registered with Tor, additional ASYNCHEVENT events
-		 * will be broadcast.
+		 * Dispatched whenever the Tor control connection replies with a synchronous response to a request. Asynchronous events (not requiring
+		 * a request) that Tor may dispatch at any time are listed below.
 		 */
 		public static const ONRESPONSE:String = "Event.TorControlEvent.ONRESPONSE";		
 		/**
@@ -59,55 +61,55 @@ package org.torproject.events {
 		 * TO BE IMPLEMENTED IN NEXT FEW VERSIONS
 		 */
 		/**
-		 * Dispatched whenever the Tor control connection signals an asynchronous "DEBUG" event. [NOT YET IMPLEMENTED]
+		 * Dispatched whenever the Tor control connection signals an asynchronous "DEBUG" event.
 		 */
 		public static const TOR_DEBUG:String = "Event.TorControlEvent.ONEVENT.TOR_DEBUG";
 		/**
-		 * Dispatched whenever the Tor control connection signals an asynchronous "INFO" event. [NOT YET IMPLEMENTED]
+		 * Dispatched whenever the Tor control connection signals an asynchronous "INFO" event.
 		 */
 		public static const TOR_INFO:String = "Event.TorControlEvent.ONEVENT.TOR_INFO";
 		/**
-		 * Dispatched whenever the Tor control connection signals an asynchronous "NOTICE" event. [NOT YET IMPLEMENTED]
+		 * Dispatched whenever the Tor control connection signals an asynchronous "NOTICE" event.
 		 */
 		public static const TOR_NOTICE:String = "Event.TorControlEvent.ONEVENT.TOR_NOTICE";
 		/**
-		 * Dispatched whenever the Tor control connection signals an asynchronous "WARN" event. [NOT YET IMPLEMENTED]
+		 * Dispatched whenever the Tor control connection signals an asynchronous "WARN" event.
 		 */
 		public static const TOR_WARN:String = "Event.TorControlEvent.ONEVENT.TOR_WARN";
 		/**
-		 * Dispatched whenever the Tor control connection signals an asynchronous "ERR" event. [NOT YET IMPLEMENTED]
+		 * Dispatched whenever the Tor control connection signals an asynchronous "ERR" event.
 		 */
 		public static const TOR_ERR:String = "Event.TorControlEvent.ONEVENT.TOR_ERR";
 		/**
-		 * Dispatched whenever the Tor control connection signals an asynchronous "CIRC" event. [NOT YET IMPLEMENTED]
+		 * Dispatched whenever the Tor control connection signals an asynchronous "CIRC" event.
 		 */
 		public static const TOR_CIRC:String = "Event.TorControlEvent.ONEVENT.TOR_CIRC";
 		/**
-		 * Dispatched whenever the Tor control connection signals an asynchronous "STREAM" event. [NOT YET IMPLEMENTED]
+		 * Dispatched whenever the Tor control connection signals an asynchronous "STREAM" event.
 		 */
 		public static const TOR_STREAM:String = "Event.TorControlEvent.ONEVENT.TOR_STREAM";
 		/**
-		 * Dispatched whenever the Tor control connection signals an asynchronous "ORCONN" event. [NOT YET IMPLEMENTED]
+		 * Dispatched whenever the Tor control connection signals an asynchronous "ORCONN" event.
 		 */
-		public static const TOR_ORCONN:String = "Event.TorControlEvent.ONEVENT.TOR_ORCONN";			
+		public static const TOR_ORCONN:String = "Event.TorControlEvent.ONEVENT.TOR_ORCONN";
 		/**
-		 * Dispatched whenever the Tor control connection signals an asynchronous "BW" event. [NOT YET IMPLEMENTED]
+		 * Dispatched whenever the Tor control connection signals an asynchronous "BW" event.
 		 */
 		public static const TOR_BW:String = "Event.TorControlEvent.ONEVENT.TOR_BW";	
 		/**
-		 * Dispatched whenever the Tor control connection signals an asynchronous "NEWDESC" event. [NOT YET IMPLEMENTED]
+		 * Dispatched whenever the Tor control connection signals an asynchronous "NEWDESC" event.
 		 */
 		public static const TOR_NEWDESC:String = "Event.TorControlEvent.ONEVENT.TOR_NEWDESC";	
 		/**
-		 * Dispatched whenever the Tor control connection signals an asynchronous "ADDRMAP" event. [NOT YET IMPLEMENTED]
+		 * Dispatched whenever the Tor control connection signals an asynchronous "ADDRMAP" event.
 		 */
 		public static const TOR_ADDRMAP:String = "Event.TorControlEvent.ONEVENT.TOR_ADDRMAP";	
 		/**
-		 * Dispatched whenever the Tor control connection signals an asynchronous "AUTHDIR_NEWDESCS" event. [NOT YET IMPLEMENTED]
+		 * Dispatched whenever the Tor control connection signals an asynchronous "AUTHDIR_NEWDESCS" event.
 		 */
 		public static const TOR_AUTHDIR_NEWDESCS:String = "Event.TorControlEvent.ONEVENT.TOR_AUTHDIR_NEWDESCS";
 		/**
-		 * Dispatched whenever the Tor control connection signals an asynchronous "DESCCHANGED" event. [NOT YET IMPLEMENTED]
+		 * Dispatched whenever the Tor control connection signals an asynchronous "DESCCHANGED" event.
 		 */
 		public static const TOR_DESCCHANGED:String = "Event.TorControlEvent.ONEVENT.TOR_DESCCHANGED";
 		/**
@@ -118,6 +120,7 @@ package org.torproject.events {
 		public var status:int = 0; //Control event status code (parsed)
 		public var rawMessage:String = new String(); //Control event response body (unparsed)
 		public var torEvent:String = null; //Used only by Event.TorControlEvent.ONEVENT to specify asynchronous Tor event
+		public var error:TorASError = null;
 		
 		public function TorControlEvent(p_type:String, p_bubbles:Boolean=false, p_cancelable:Boolean=false) {
 			super(p_type, p_bubbles, p_cancelable);
