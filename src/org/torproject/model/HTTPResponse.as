@@ -185,20 +185,7 @@ package org.torproject.model {
 			var chunkSection:Object = this.getChunkSection(workingCopy);
 			while (chunkSection.size > 0) {
 				assembledBody += chunkSection.chunk;
-				workingCopy = chunkSection.remainder;
-				trace ("-------------------");
-				trace ("Orignal: ");
-				trace (chunkSection.original);
-				trace ("-------------------");
-				
-				trace ("Chunk size: " + chunkSection.size);
-				trace ("-------------------");
-				trace ("Chunk: ");
-				trace (chunkSection.chunk);
-				trace ("-------------------");
-				trace ("dechunked: ");
-				trace (chunkSection.remainder);
-				trace ("-------------------");
+				workingCopy = chunkSection.remainder;			
 				chunkSection = this.getChunkSection(workingCopy);
 			}//while		
 			return (assembledBody);

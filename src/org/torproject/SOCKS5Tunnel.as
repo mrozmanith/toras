@@ -121,7 +121,7 @@ package org.torproject {
 			if (request == null) {
 				return (false);
 			}//if			
-			this._urlRequestBuffer.push(request);
+			this._urlRequestBuffer.push(request);			
 			this._responseBuffer = new ByteArray();
 			this._connected = false;
 			this._authenticated = false;
@@ -238,10 +238,8 @@ package org.torproject {
 		
 		private function handleHTTPRedirect(responseObj:HTTPResponse):void {
 			if (this._currentRequest.followRedirects) {
-				if ((responseObj.statusCode == 301) || (responseObj.statusCode == 302)) {
-					trace ("Detected a redirect!");
-					var redirectURL:HTTPResponseHeader = responseObj.getHeader("Location");
-					trace ("Trying: "+redirectURL);
+				if ((responseObj.statusCode == 301) || (responseObj.statusCode == 302)) {					
+					var redirectURL:HTTPResponseHeader = responseObj.getHeader("Location");					
 					if (redirectURL != null) {
 						this._currentRequest.url = redirectURL.value;
 						this._urlRequestBuffer.push(this._currentRequest);
@@ -279,8 +277,7 @@ package org.torproject {
 					this._HTTPStatusReceived = true;
 					var statusEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONHTTPSTATUS);			
 					statusEvent.httpResponse = this._HTTPResponse;	
-					this.dispatchEvent(statusEvent);		
-					trace ("STATUS RECEIVED!");
+					this.dispatchEvent(statusEvent);							
 					this.handleHTTPRedirect(this._HTTPResponse);
 				}//if
 			}//if
@@ -289,17 +286,14 @@ package org.torproject {
 					this._HTTPHeadersReceived = true;
 					statusEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONHTTPHEADERS);			
 					statusEvent.httpResponse = this._HTTPResponse;	
-					this.dispatchEvent(statusEvent);	
-					trace ("HEADERS RECEIVED!");
+					this.dispatchEvent(statusEvent);						
 				}//if
 			}//if			
 			if (!this.tunnelRequestComplete(rawData)) {				
 				rawData.readBytes(this._responseBuffer, this._responseBuffer.length);				
 				return;
 			}//if
-			rawData.readBytes(this._responseBuffer, this._responseBuffer.length);
-		//	trace ("ALL DATA!");			
-		//	trace (this._responseBuffer.toString());
+			rawData.readBytes(this._responseBuffer, this._responseBuffer.length);		
 			this._HTTPResponse.parseResponseBody(this._responseBuffer);
 			this._responseBuffer.position = 0;
 			stringData = this._responseBuffer.readMultiByte(this._responseBuffer.length, SOCKS5Model.charSetEncoding);					
