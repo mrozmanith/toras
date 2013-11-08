@@ -146,8 +146,8 @@ import import flash.net.URLRequest;
 import import flash.net.URLVariables;
 
 var request:URLRequest=new URLRequest("http://www.myserver.com/");
-var variables:URLVariables=new URLVariables();
-vairables.userName="Patrick";
+var variables=new URLVariables();
+variables.userName="Patrick";
 variables.password="pass123";
 request.data=variables;
 }}}
@@ -156,6 +156,25 @@ Not all properties or a URLRequest instance are supported by TorAS (yet!) These 
 
 *authenticate, cacheResponse, contentType, digest, idleTimeout, method, useCache*
 
-Additionally, the following method is not yet included:
+Additionally, the following method is not yet supported:
 
 *useRedirectURL*
+
+Once the request has been properly constructed, it is used as the parameter for the loadHTTP method of the SOCKS5Tunnel instance:
+
+{{{
+import org.torproject.SOCKS5Tunnel;
+import org.torproject.events.SOCKS5TunnelEvent
+
+var tunnel:SOCK5Tunnel = new SOCKS5Tunnel();		tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPRESPONSE, onSOCKSTunnelResponse);
+tunnel.loadHTTP(request);	
+
+function onSOCKSTunnelResponse(eventObj:SOCKS5TunnelEvent):void {
+   trace ("Got response: ");
+   trace (eventObj.httpResponse.body);
+}
+}}}
+
+There are other events that you can listen to, including _SOCKS5TunnelEvent.ONHTTPSTATUS_, which is broadcast as soon as the connection has received enough information to fully parse the HTTP response code (200, 404, etc.), and _SOCKS5TunnelEvent.ONHTTPHEADERS_ which is dispatched when enough HTTP header information has been received. The _SOCKS5TunnelEvent.ONHTTPRESPONSE_ event is the final event dispatched, once the complete response body has been received.
+
+SOCKS5Tunnel attempts to reconstruct chunked HTTP responses so that the contents of the _SOCKS5TunnelEvent.httpResponse.body_ property contains the reconstructed (un-chunked) response data. However, the raw HTTP response, including headers and chunked sections, can be accessed via the _SOCKS5TunnelEvent.httpResponse.rawResponse_ property (a ByteArray).
