@@ -1,4 +1,6 @@
+#summary Tor v1 Control Protocol Specification
 #labels Tor,control,protocol,specification
+
 For the authoritative Tor control protocol specification document, please visit: https://gitweb.torproject.org/torspec.git?a=blob_plain;hb=HEAD;f=control-spec.txt
 
 ---
