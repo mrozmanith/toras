@@ -304,7 +304,7 @@ package org.torproject {
 					var redirectInfo:HTTPResponseHeader = responseObj.getHeader("Location");						
 					if (redirectInfo != null) {		
 						this._redirectCount++;						
-						//this._currentRequest.url = redirectInfo.value;											
+						this._currentRequest.url = redirectInfo.value;											
 						this._HTTPStatusReceived = false;
 						this._HTTPHeadersReceived = false;											
 						this._responseBuffer = new ByteArray();

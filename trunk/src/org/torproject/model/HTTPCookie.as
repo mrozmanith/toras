@@ -1,7 +1,7 @@
-package org.torproject.model 
-{
+package org.torproject.model  {
+	
 	/**
-	 * Stores a HTTP 1.1 cookie.
+	 * Stores HTTP 1.1 cookie information.
 	 * 
 	 * @author Patrick Bay
 	 * 

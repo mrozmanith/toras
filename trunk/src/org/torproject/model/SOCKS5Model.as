@@ -89,9 +89,9 @@ package org.torproject.model {
 			returnString = request.method + " " + URLUtil.getResourcePath(request.url) + " " + HTTP_request_prefix + "/" + HTTP_version + lineEnd;			
 			returnString += "User-Agent: " + URLRequestDefaults.userAgent + lineEnd;
 			returnString += "Host: " + URLUtil.getServerName(request.url) + lineEnd;
-			returnString += "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" + lineEnd;
-			returnString += "Accept-Encoding: gzip,deflate,sdch" + lineEnd;
-			returnString += "Accept-Language: en-US,en;q=0.8" + lineEnd;
+			//returnString += "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" + lineEnd;
+			//returnString += "Accept-Encoding: gzip,deflate,sdch" + lineEnd;
+			//returnString += "Accept-Language: en-US,en;q=0.8" + lineEnd;
 			for (var count:uint = 0; count < request.requestHeaders.length; count++) {
 				var currentHeader:URLRequestHeader = request[count] as URLRequestHeader;
 				returnString += currentHeader.name + ": " + currentHeader.value + lineEnd;
