@@ -7,7 +7,7 @@ package  {
 	import org.torproject.TorControl;
 	import org.torproject.events.SOCKS5TunnelEvent
 	import org.torproject.SOCKS5Tunnel;
-	import flash.net.URLRequest;
+	import flash.net.URLRequest;	
 	
 	/**
 	 * Sample class to demonstrate dynamically launching Tor network connectivity using the included
@@ -60,26 +60,35 @@ package  {
 		
 		private function onHTTPResponse(eventObj:SOCKS5TunnelEvent):void {
 			trace ("--------------------------------------------------------");
-			trace ("Loaded via Tor from http://www.google.com/: ");
+			trace ("Loaded via Tor: ");
 			trace(" ");
 			trace ("STATUS: " + eventObj.httpResponse.statusCode + " " + eventObj.httpResponse.status);
 			trace(" ");
 			trace ("HEADERS: ");
 			trace(" ");
-			for (var count:uint = 0; count < eventObj.httpResponse.headers.length; count++) {
-				var httpHeader:HTTPResponseHeader = eventObj.httpResponse.headers[count];
-				trace (httpHeader.name + ": " + httpHeader.value);
-			}//for
+			if (eventObj.httpResponse.headers!=null) {
+				for (var count:uint = 0; count < eventObj.httpResponse.headers.length; count++) {
+					var httpHeader:HTTPResponseHeader = eventObj.httpResponse.headers[count];
+					trace (httpHeader.name + ": " + httpHeader.value);
+				}//for
+			} else {
+				trace ("No response headers -- either a bad response or a severe error.");
+			}
 			trace(" ");			
 			trace ("RESPONSE BODY: ");
 			trace(" ");
 			trace (eventObj.httpResponse.body);		
-			trace ("--------------------------------------------------------");
+			trace ("--------------------------------------------------------");		
 		}
 		
 		private function onHTTPRedirect(eventObj:SOCKS5TunnelEvent):void {
 			trace ("Received HTTP redirect error " + eventObj.httpResponse.statusCode);
-			trace ("Redirecting to: " + SOCKS5Tunnel(eventObj.target).activeRequest.url);
+			trace ("Redirecting to: " + SOCKS5Tunnel(eventObj.target).activeRequest.url);			
+			var headers:Vector.<HTTPResponseHeader> = eventObj.httpResponse.headers;
+			trace ("HEADERS >>>");
+			for (var count:uint = 0; count < headers.length; count++) {
+				trace (headers[count].name + ": " + headers[count].value);
+			}
 		}
 		
 		private function onSOCKS5TunnelDisconnect(eventObj:SOCKS5TunnelEvent):void {
@@ -92,15 +101,15 @@ package  {
 		}
 		
 		private function onTorWARNMessage(eventObj:TorControlEvent):void {
-	//		trace ("Tor WARN event: "+eventObj.body);
+			trace ("Tor WARN event: "+eventObj.body);
 		}
 		
 		private function onTorINFOMessage(eventObj:TorControlEvent):void {
-	//		trace ("Tor INFO event: "+eventObj.body);
+			trace ("Tor INFO event: "+eventObj.body);
 		}
 		
 		private function onTorNOTICEMessage(eventObj:TorControlEvent):void {
-		//	trace ("Tor NOTICE event: "+eventObj.body);
+			trace ("Tor NOTICE event: "+eventObj.body);
 		}
 				
 		private function onTorControlReady(eventObj:TorControlEvent):void {
@@ -115,8 +124,8 @@ package  {
 			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPRESPONSE, this.onHTTPResponse);
 			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPREDIRECT, this.onHTTPRedirect);
 			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONDISCONNECT, this.onSOCKS5TunnelDisconnect);
-			this.tunnel.loadHTTP(proxyRequest);			
-		}
+			this.tunnel.loadHTTP(proxyRequest);
+		}	
 		
 	}
 

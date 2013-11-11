@@ -32,6 +32,7 @@ package org.torproject {
 		
 		public static const defaultSOCKSIP:String = "127.0.0.1";
 		public static const defaultSOCKSPort:int = 1080;
+		public static const maxRedirects:int = 5;
 		private var _tunnelSocket:Socket = null;
 		private var _tunnelIP:String = null;
 		private var _tunnelPort:int = -1;
@@ -46,6 +47,7 @@ package org.torproject {
 		private var _HTTPHeadersReceived:Boolean = false;
 		private var _HTTPResponse:HTTPResponse;		
 		private var _currentRequest:URLRequest;
+		private var _redirectCount:int = 0;
 		
 		/**
 		 * Creates an instance of a SOCKS5 proxy tunnel.
@@ -115,7 +117,7 @@ package org.torproject {
 				this._requestBuffer.push(request);			
 				this._responseBuffer = new ByteArray();
 				this._HTTPStatusReceived = false;
-				this._HTTPHeadersReceived = false;
+				this._HTTPHeadersReceived = false;				
 				this.disconnectSocket();
 				this._HTTPResponse = new HTTPResponse();
 				this._connectionType = SOCKS5Model.SOCKS5_conn_TCPIPSTREAM;
@@ -136,7 +138,7 @@ package org.torproject {
 			return (this._currentRequest);
 		}//get activeRequest
 		
-		private function disconnectSocket():void {
+		private function disconnectSocket():void {			
 			this._connected = false;
 			this._authenticated = false;
 			this._tunneled = false;		
@@ -191,14 +193,14 @@ package org.torproject {
 		}//onTunnelConnectError
 		
 		private function onTunnelDisconnect(eventObj:Event):void {						
-			this.removeSocketListeners();
-			this._tunnelSocket = null;
+			this.removeSocketListeners();			
 			this._connected = false;
 			this._authenticated = false;
 			this._tunneled = false;
 			this._tunnelSocket.removeEventListener(Event.CONNECT, this.onTunnelConnect);
 			this._tunnelSocket.removeEventListener(Event.CLOSE, this.onTunnelDisconnect);
 			this._tunnelSocket.addEventListener(ProgressEvent.SOCKET_DATA, this.onTunnelData);
+			this._tunnelSocket = null;
 			var connectEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONDISCONNECT);
 			this.dispatchEvent(connectEvent);			
 		}//onTunnelData			
@@ -224,6 +226,11 @@ package org.torproject {
 			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_addr_DOMAIN); //Most secure when using DNS through proxy
 			var currentRequest:* = this._requestBuffer[0];			
 			var domain:String = URLUtil.getServerName(currentRequest.url);
+		//	var domainSplit:Array = domain.split(".");			
+		//	if (domainSplit.length>2) {
+		//		domain = domainSplit[1] + "." + domainSplit[2]; //Ensure we have JUST the domain
+		//	}//if	
+			trace ("Resolving: " + domain);
 			var domainLength:int = int(domain.length);
 			var port:int = int(URLUtil.getPort(currentRequest.url));			
 			this._tunnelSocket.writeByte(domainLength);
@@ -239,12 +246,13 @@ package org.torproject {
 			var currentRequest:* = this._requestBuffer[0];
 			if (currentRequest is URLRequest) {
 				this.sendQueuedHTTPRequest();
-			}//if
+			}//if		
 		}//onEstablishHTTPTunnel
 		
 		private function sendQueuedHTTPRequest():void {
 			var currentRequest:URLRequest = this._requestBuffer.shift() as URLRequest;
 			this._currentRequest = currentRequest;
+			this._HTTPResponse = new HTTPResponse();
 			var requestString:String = SOCKS5Model.createHTTPRequestString(currentRequest);				
 			this._tunnelSocket.writeMultiByte(requestString, SOCKS5Model.charSetEncoding);			
 			this._tunnelSocket.flush();
@@ -290,23 +298,34 @@ package org.torproject {
 			return (false);
 		}
 		
-		private function handleHTTPRedirect(responseObj:HTTPResponse):void {
+		private function handleHTTPRedirect(responseObj:HTTPResponse):Boolean {
 			if (this._currentRequest.followRedirects) {				
 				if ((responseObj.statusCode == 301) || (responseObj.statusCode == 302)) {					
 					var redirectInfo:HTTPResponseHeader = responseObj.getHeader("Location");						
-					if (redirectInfo != null) {						
-						this._currentRequest.url = redirectInfo.value;											
+					if (redirectInfo != null) {		
+						this._redirectCount++;						
+						//this._currentRequest.url = redirectInfo.value;											
 						this._HTTPStatusReceived = false;
-						this._HTTPHeadersReceived = false;
+						this._HTTPHeadersReceived = false;											
 						this._responseBuffer = new ByteArray();
+						if (this._redirectCount >= maxRedirects) {
+							//Maximum redirects hit
+							var statusEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONHTTPMAXREDIRECTS);			
+							statusEvent.httpResponse = this._HTTPResponse;						
+							this.dispatchEvent(statusEvent);							
+							this.disconnectSocket();
+							return (true);							
+						}//if
 						this._requestBuffer.push(this._currentRequest);
-						var statusEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONHTTPREDIRECT);			
+						statusEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONHTTPREDIRECT);			
 						statusEvent.httpResponse = this._HTTPResponse;						
 						this.dispatchEvent(statusEvent);	
 						this.sendQueuedHTTPRequest();
+						return (true);
 					}//if
 				}//if				
 			}//if
+			return (false);
 		}//handleHTTPRedirect
 		
 		private function handleHTTPResponse(rawData:ByteArray):void {
@@ -327,7 +346,11 @@ package org.torproject {
 					this.dispatchEvent(statusEvent);						
 				}//if
 			}//if	
-			this.handleHTTPRedirect(this._HTTPResponse); //Handle re-direct only after headers have been parsed (so we know where to go!)
+			//this.handleHTTPRedirect(this._HTTPResponse);
+			if (this.handleHTTPRedirect(this._HTTPResponse)) {				
+				//rawData = null;
+				return;
+			}//if
 			if (!this.tunnelRequestComplete(rawData)) {	
 				return;
 			}//if				
@@ -340,7 +363,7 @@ package org.torproject {
 			this.dispatchEvent(dataEvent);	
 			this._responseBuffer = new ByteArray();		
 			this._HTTPStatusReceived = false;
-			this._HTTPHeadersReceived = false;
+			this._HTTPHeadersReceived = false;			
 			this.disconnectSocket();
 		}//handleHTTPResponse
 		

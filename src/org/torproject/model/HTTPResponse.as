@@ -29,8 +29,10 @@ package org.torproject.model {
 	 * THE SOFTWARE. 
 	 */
 	public class HTTPResponse {
-		
-		public static const CRLF:String = String.fromCharCode(13) + String.fromCharCode(10);
+				
+		public static const CR:String = String.fromCharCode(13);
+		public static const LF:String = String.fromCharCode(10);
+		public static const CRLF:String = CR+LF;
 		public static const doubleCRLF:String = CRLF + CRLF;
 		public static const SPACE:String = String.fromCharCode(32);		
 		
@@ -182,27 +184,31 @@ package org.torproject.model {
 			return (this._rawResponse);
 		}
 		
-		private function parseChunkedBody(chunkedBody:String):String {
+		private function parseChunkedBody(chunkedBody:String):String {		
 			var assembledBody:String = new String();
 			var workingCopy:String = new String(chunkedBody);
 			var chunkSection:Object = this.getChunkSection(workingCopy);
 			while (chunkSection.size > 0) {
 				assembledBody += chunkSection.chunk;
 				workingCopy = chunkSection.remainder;			
-				chunkSection = this.getChunkSection(workingCopy);
+				chunkSection = this.getChunkSection(workingCopy);				
 			}//while		
 			return (assembledBody);
 		}
 		
 		private function getChunkSection(chunkedBody:String):Object {
 			try {
-				var chunkHeader:String = "0x"+chunkedBody.substr(0, 4); //Make it hex
-				var chunkSize:Number = new Number(chunkHeader);
+				//Chunk length header may be variable length...
+				var chunkLengthHeader:String = chunkedBody.substr(0, chunkedBody.indexOf(CR));
+				chunkLengthHeader = chunkLengthHeader.split(LF)[0] as String; //Make sure to strip possible linefeed
+				var chunkHeader:String = "0x" + chunkedBody.substr(0, Number(chunkLengthHeader.length)); //Make it hex				
+				var chunkSize:Number = new Number(chunkHeader);								
 				var chunkStart:int = chunkHeader.length;// + CRLF.length;
 				var chunkEnd:int = chunkStart + chunkSize;			
 				var returnData:Object = new Object();
 				returnData.chunk = chunkedBody.substring(chunkStart, chunkEnd);
-				returnData.chunk = returnData.chunk.substr(0, returnData.chunk.length + CRLF.length); //Remove linefeed after chunk section
+				returnData.chunk = returnData.chunk.substr(0, returnData.chunk.length);
+				//returnData.chunk = returnData.chunk.substr(0, returnData.chunk.length);// + CRLF.length); //Remove linefeed after chunk section				
 				returnData.size = chunkSize;
 				returnData.original = chunkedBody;
 				returnData.remainder = chunkedBody.substring(chunkEnd + CRLF.length);				
@@ -212,9 +218,9 @@ package org.torproject.model {
 				returnData.size = 0;
 				returnData.original = chunkedBody;
 				returnData.remainder = null;
-			}
+			}//catch
 			return (returnData);
-		}
+		}//getChunkSection
 		
 		
 		/**

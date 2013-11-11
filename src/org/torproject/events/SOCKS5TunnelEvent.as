@@ -62,6 +62,10 @@ package org.torproject.events {
 		 */
 		public static const ONHTTPREDIRECT:String = "Event.SOCKS5TunnelEvent.ONHTTPREDIRECT";
 		/**
+		 * Dispatched when the SOCKS5Tunnel instance has done more than the maximum number of automated redirects (default is 5).
+		 */
+		public static const ONHTTPMAXREDIRECTS:String = "Event.SOCKS5TunnelEvent.ONHTTPMAXREDIRECTS";
+		/**
 		 * Dispatched when the SOCKS5Tunnel instance receives enough information to parse HTTP headers from a response.
 		 * In a typical response, status would be parsed first, followed by headers, and finally by the ONHTTPRESPONSE event.
 		 */

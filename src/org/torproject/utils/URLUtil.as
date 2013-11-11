@@ -61,6 +61,27 @@ import org.torproject.utils.LoaderConfig;
 				sp = sp.substring(0, delim);
 			return sp;
 		}//getServerName
+		
+		/**
+		 *  Returns the resource path portion (everything after protocol+domain+port) of the specified URL.
+		 *  
+		 *  @param url The URL to analyze.
+		 *  @return The resource portion of the specified URL.
+		 */
+		public static function getResourcePath(url:String):String {
+			//Works with both IPv4 and IPv6 addresses.
+			var domainStart:int = url.indexOf("//");
+			if (domainStart < 0) 
+			{
+				return (url);
+			}
+			var domainEnd:int = url.indexOf("/", Number(domainStart) + 3);
+			var resourceAddr:String = url.substr(domainEnd);
+			if (resourceAddr == "") {
+				//resourceAddr = "/";
+			}//if
+			return (resourceAddr);
+		}//getResourcePath
 
 		/**
 		 *  Returns the port number from the specified URL.
