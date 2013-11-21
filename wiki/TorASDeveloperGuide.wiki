@@ -180,6 +180,8 @@ function onSOCKSTunnelResponse(eventObj:SOCKS5TunnelEvent):void {
 
 There are other events that you can listen to, including _SOCKS5TunnelEvent.ONHTTPSTATUS_, which is broadcast as soon as the connection has received enough information to fully parse the HTTP response code (200, 404, etc.), and _SOCKS5TunnelEvent.ONHTTPHEADERS_ which is dispatched when enough HTTP header information has been received. The _SOCKS5TunnelEvent.ONHTTPRESPONSE_ event is the final event dispatched, once the complete response body has been received.
 
+Other than the HTTP response information already mentioned, the HTTP response object also contains a vector array of HTTPCookie objects (containing any valid cookies), which are generated from any "Set-Cookie" directives in the response headers. This data becomes available to developers as soon as response headers are fully received and parsed.
+
 SOCKS5Tunnel attempts to reconstruct chunked HTTP responses so that the contents of the _SOCKS5TunnelEvent.httpResponse.body_ property contains the reconstructed (un-chunked) response data. However, the raw HTTP response, including headers and chunked sections, can be accessed via the _SOCKS5TunnelEvent.httpResponse.rawResponse_ property (a ByteArray).
 
 Putting this all together, a sample HTTP request would look something like this:
