@@ -1,4 +1,7 @@
 package org.torproject.model {
+	
+	import org.torproject.model.HTTPCookie;
+	import org.torproject.model.HTTPResponseHeader;
 	import flash.utils.ByteArray;
 	
 	/**
@@ -34,11 +37,13 @@ package org.torproject.model {
 		public static const LF:String = String.fromCharCode(10);
 		public static const CRLF:String = CR+LF;
 		public static const doubleCRLF:String = CRLF + CRLF;
-		public static const SPACE:String = String.fromCharCode(32);		
+		public static const SPACE:String = String.fromCharCode(32);	
+		public static const cookieSetHeader:String = "Set-Cookie";
 		
 		private var _statusCode:int = new int( -1);
 		private var _status:String = new String();
 		private var _headers:Vector.<HTTPResponseHeader> = null;
+		private var _cookies:Vector.<HTTPCookie> = null;
 		private var _body:String = new String();
 		private var _rawResponse:ByteArray = null;
 		private var _protocol:String = new String();
@@ -107,13 +112,34 @@ package org.torproject.model {
 					if (newHeader.name!="") {
 						this._headers.push(newHeader);
 					}//if
-				}//for				
+				}//for
+				this.parseResponseCookies(); //Call ONLY after parsing headers since this is where cookies are stored
 				return (true);
 			} catch (err:*) {
 				return (false);
 			}//catch
 			return (false);
 		}//parseResponseHeaders
+		
+		private function parseResponseCookies():void {
+			if (this.headers == null) {
+				return;
+			}//if
+			if (this.headers.length<1) {
+				return;
+			}//if
+			this._cookies = new Vector.<HTTPCookie>();
+			for (var count:uint = 0; count < this.headers.length; count++) {
+				var currentHeader:HTTPResponseHeader = this.headers[count];
+				if (currentHeader.name==cookieSetHeader) {
+					var newCookie:HTTPCookie = new HTTPCookie(currentHeader.value);
+					if (newCookie.isValid) {
+						this._cookies.push(newCookie);
+					}//if
+				}//if
+			}//for
+		}//parseResponseCookie
+				
 		
 		/**
 		 * Parses the supplied data as HTTP response body data.
@@ -301,6 +327,10 @@ package org.torproject.model {
 		
 		public function get headers():Vector.<HTTPResponseHeader> {
 			return (this._headers);
+		}
+		
+		public function get cookies():Vector.<HTTPCookie> {
+			return (this._cookies);
 		}
 		
 		public function get body():String {

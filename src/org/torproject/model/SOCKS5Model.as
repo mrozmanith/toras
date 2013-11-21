@@ -39,6 +39,7 @@ package org.torproject.model {
 		public static const charSetEncoding:String = "iso-8859-1";
 		public static const HTTP_request_prefix:String = "HTTP";
 		public static const HTTP_version:String = "1.1";
+		public static const HTTP_cookie_header:String = "Cookie: ";
 		public static const lineEnd:String = String.fromCharCode(13) + String.fromCharCode(10);
 		public static const doubleLineEnd:String = lineEnd+lineEnd;		
 		
@@ -77,11 +78,12 @@ package org.torproject.model {
 		 * Creates a complete HTTP request string, complete with headers.
 		 * 
 		 * @param	request The URLRequest object to parse and create the request from.
+		 * @param   cookies An optional vector of HTTPCookie objects to send with the request. These will be appended to the header data.
 		 * 
 		 * @return A valid, complete HTTP request including request headers, etc., or null if one couldn't be created.
 		 * 
 		 */
-		public static function createHTTPRequestString(request:URLRequest):String {
+		public static function createHTTPRequestString(request:URLRequest, cookies:Vector.<HTTPCookie>=null):String {
 			if (request == null) {
 				return (null);
 			}//if
@@ -89,6 +91,7 @@ package org.torproject.model {
 			returnString = request.method + " " + URLUtil.getResourcePath(request.url) + " " + HTTP_request_prefix + "/" + HTTP_version + lineEnd;			
 			returnString += "User-Agent: " + URLRequestDefaults.userAgent + lineEnd;
 			returnString += "Host: " + URLUtil.getServerName(request.url) + lineEnd;
+			returnString += appendHeaderCookies(cookies);
 			//returnString += "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" + lineEnd;
 			//returnString += "Accept-Encoding: gzip,deflate,sdch" + lineEnd;
 			//returnString += "Accept-Language: en-US,en;q=0.8" + lineEnd;
@@ -101,9 +104,24 @@ package org.torproject.model {
 				//This is probably formatted differently! Need to fix ASAP :)
 				returnString += request.data;
 			}//if			
-			returnString += lineEnd + lineEnd;			
+			returnString += lineEnd + lineEnd;				
 			return (returnString);
 		}//createHTTPRequestString
+		
+		private static function appendHeaderCookies(cookies:Vector.<HTTPCookie> = null):String {
+			if (cookies == null) {
+				return ("");
+			}//if
+			if (cookies.length<1) {
+				return ("");
+			}//if
+			var returnStr:String = new String();
+			for (var count:uint = 0; count < cookies.length; count++) {
+				var currentCookie:HTTPCookie = cookies[count];				
+				returnStr += HTTP_cookie_header + HTTPResponse.SPACE + currentCookie.name + HTTPCookie.nameValueDelimiter + currentCookie.value +lineEnd;				
+			}//for			
+			return (returnStr);
+		}
 				
 	}//SOCKS5Model class
 
