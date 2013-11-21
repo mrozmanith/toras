@@ -47,7 +47,7 @@ package org.torproject {
 		private var _HTTPHeadersReceived:Boolean = false;
 		private var _HTTPResponse:HTTPResponse;		
 		private var _currentRequest:URLRequest;
-		private var _redirectCount:int = 0;
+		private var _redirectCount:int = 0;		
 		
 		/**
 		 * Creates an instance of a SOCKS5 proxy tunnel.
@@ -229,8 +229,7 @@ package org.torproject {
 		//	var domainSplit:Array = domain.split(".");			
 		//	if (domainSplit.length>2) {
 		//		domain = domainSplit[1] + "." + domainSplit[2]; //Ensure we have JUST the domain
-		//	}//if	
-			trace ("Resolving: " + domain);
+		//	}//if				
 			var domainLength:int = int(domain.length);
 			var port:int = int(URLUtil.getPort(currentRequest.url));			
 			this._tunnelSocket.writeByte(domainLength);
@@ -252,8 +251,17 @@ package org.torproject {
 		private function sendQueuedHTTPRequest():void {
 			var currentRequest:URLRequest = this._requestBuffer.shift() as URLRequest;
 			this._currentRequest = currentRequest;
+			if (this._HTTPResponse!=null ) {
+				if (this._currentRequest.manageCookies) {
+					var requestString:String = SOCKS5Model.createHTTPRequestString(currentRequest, this._HTTPResponse.cookies);		
+				} else {
+					requestString = SOCKS5Model.createHTTPRequestString(currentRequest, null);
+				}//else
+			} else {
+				requestString = SOCKS5Model.createHTTPRequestString(currentRequest, null);
+			}//else
 			this._HTTPResponse = new HTTPResponse();
-			var requestString:String = SOCKS5Model.createHTTPRequestString(currentRequest);				
+			
 			this._tunnelSocket.writeMultiByte(requestString, SOCKS5Model.charSetEncoding);			
 			this._tunnelSocket.flush();
 		}//sendQueuedHTTPRequest
@@ -304,7 +312,8 @@ package org.torproject {
 					var redirectInfo:HTTPResponseHeader = responseObj.getHeader("Location");						
 					if (redirectInfo != null) {		
 						this._redirectCount++;						
-						this._currentRequest.url = redirectInfo.value;											
+						this._currentRequest.url = redirectInfo.value;	
+						
 						this._HTTPStatusReceived = false;
 						this._HTTPHeadersReceived = false;											
 						this._responseBuffer = new ByteArray();
@@ -345,10 +354,8 @@ package org.torproject {
 					statusEvent.httpResponse = this._HTTPResponse;
 					this.dispatchEvent(statusEvent);						
 				}//if
-			}//if	
-			//this.handleHTTPRedirect(this._HTTPResponse);
-			if (this.handleHTTPRedirect(this._HTTPResponse)) {				
-				//rawData = null;
+			}//if				
+			if (this.handleHTTPRedirect(this._HTTPResponse)) {								
 				return;
 			}//if
 			if (!this.tunnelRequestComplete(rawData)) {	
