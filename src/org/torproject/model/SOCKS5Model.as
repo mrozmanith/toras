@@ -54,7 +54,7 @@ package org.torproject.model {
 		
 		//Connection type constants				
 		public static const SOCKS5_conn_TCPIPSTREAM:int = 1; //TCP/IP streaming connection
-		public static const SOCKS5_conn_TCPIPPORT:int = 2; //TCP/IP port binding
+		public static const SOCKS5_conn_TCPIPPORT:int = 2; //TCP/IP port binding (listening)
 		public static const SOCKS5_conn_UDPPORT:int = 3; //UDP port binding
 		
 		//Address type constants				
