@@ -38,7 +38,7 @@ package org.torproject.model {
 		public static const CRLF:String = CR+LF;
 		public static const doubleCRLF:String = CRLF + CRLF;
 		public static const SPACE:String = String.fromCharCode(32);	
-		public static const cookieSetHeader:String = "Set-Cookie";
+		public static const cookieSetHeader:String = "set-Cookie";
 		
 		private var _statusCode:int = new int( -1);
 		private var _status:String = new String();
@@ -131,7 +131,7 @@ package org.torproject.model {
 			this._cookies = new Vector.<HTTPCookie>();
 			for (var count:uint = 0; count < this.headers.length; count++) {
 				var currentHeader:HTTPResponseHeader = this.headers[count];
-				if (currentHeader.name==cookieSetHeader) {
+				if (currentHeader.name.toLowerCase()==cookieSetHeader) {
 					var newCookie:HTTPCookie = new HTTPCookie(currentHeader.value);
 					if (newCookie.isValid) {
 						this._cookies.push(newCookie);

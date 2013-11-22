@@ -2,6 +2,7 @@ package org.torproject {
 	
 	import flash.events.EventDispatcher;
 	import flash.net.Socket;
+	import flash.net.SecureSocket;	
 	import flash.events.Event;
 	import flash.events.ProgressEvent;
 	import flash.events.IOErrorEvent;	
@@ -76,7 +77,7 @@ package org.torproject {
 		 */
 		public function get tunnelPort():int {
 			return (this._tunnelPort);
-		}//get tunnelPort
+		}//get tunnelPort		
 		
 		/**
 		 * The tunnel connection type being managed by this instance.
@@ -120,9 +121,10 @@ package org.torproject {
 				this._HTTPHeadersReceived = false;				
 				this.disconnectSocket();
 				this._HTTPResponse = new HTTPResponse();
-				this._connectionType = SOCKS5Model.SOCKS5_conn_TCPIPSTREAM;
-				this._tunnelSocket = new Socket(this.tunnelIP, this.tunnelPort);
-				this.addSocketListeners();
+				this._connectionType = SOCKS5Model.SOCKS5_conn_TCPIPSTREAM;			
+				this._tunnelSocket = new Socket();				
+				this.addSocketListeners();				
+				this._tunnelSocket.connect(this.tunnelIP, this.tunnelPort);
 				return (true);
 			} catch (err:*) {
 				var eventObj:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONCONNECTERROR);

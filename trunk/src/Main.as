@@ -45,7 +45,7 @@ package  {
 		
 		public function Main() {
 			this.launchTorControl();	
-		}	
+		}			
 		
 		private function launchTorControl():void {
 			if (torControl==null) {
@@ -56,8 +56,7 @@ package  {
 				torControl.connect();
 			}//if
 		}
-				
-		
+						
 		private function onHTTPResponse(eventObj:SOCKS5TunnelEvent):void {
 			trace ("--------------------------------------------------------");
 			trace ("Loaded via Tor: ");
@@ -81,6 +80,7 @@ package  {
 			trace ("--------------------------------------------------------");		
 		}
 		
+		/* PRIVATE */
 		private function onHTTPRedirect(eventObj:SOCKS5TunnelEvent):void {
 			trace ("Received HTTP redirect error " + eventObj.httpResponse.statusCode);
 			trace ("Redirecting to: " + SOCKS5Tunnel(eventObj.target).activeRequest.url);			
@@ -91,27 +91,33 @@ package  {
 			}
 		}
 		
+		/* PRIVATE */
 		private function onSOCKS5TunnelDisconnect(eventObj:SOCKS5TunnelEvent):void {
 			trace ("SOCKS5 tunnel disconnected.");			
 		}
 		
+		/* PRIVATE */
 		private function onTorLogMessage(eventObj:TorControlEvent):void {
 			//STDOUT log from Tor -- only available if we're launching the process using TorControl
 			trace (TorControl.executable + " > "+eventObj.rawMessage);
 		}
 		
+		/* PRIVATE */
 		private function onTorWARNMessage(eventObj:TorControlEvent):void {
 			trace ("Tor WARN event: "+eventObj.body);
 		}
 		
+		/* PRIVATE */
 		private function onTorINFOMessage(eventObj:TorControlEvent):void {
 			trace ("Tor INFO event: "+eventObj.body);
 		}
 		
+		/* PRIVATE */
 		private function onTorNOTICEMessage(eventObj:TorControlEvent):void {
 			trace ("Tor NOTICE event: "+eventObj.body);
 		}
 				
+		/* PRIVATE */
 		private function onTorControlReady(eventObj:TorControlEvent):void {
 			trace ("Main.as > TorControl is connected, authenticated, and ready for commands.");
 			//Listen for some internal Tor events...
