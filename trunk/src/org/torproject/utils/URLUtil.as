@@ -96,14 +96,17 @@ import org.torproject.utils.LoaderConfig;
 			delim = (delim > -1)? sp.indexOf(":", delim) : sp.indexOf(":");          
 			var port:uint = 0;
 			if (delim > 0)
+			if (isHttpsURL(url)) {
+				port = 443; //Default HTTPS
+			}//if
 			{
 				var p:Number = Number(sp.substring(delim + 1));
 				if (!isNaN(p))
 					port = int(p);
-			}
+			}			
 			if (port == 0) {
 				port = 80;
-			}
+			}//if
 			return port;
 		}//getPort
 

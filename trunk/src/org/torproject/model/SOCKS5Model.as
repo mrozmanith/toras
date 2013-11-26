@@ -5,7 +5,8 @@ package org.torproject.model {
 	import flash.net.URLRequestHeader;
 	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
-	import org.torproject.utils.URLUtil;
+	import flash.utils.ByteArray;
+	import org.torproject.utils.URLUtil;	
 	
 	/**
 	 * Stores protocol lookup, message construction, and other information for use with the SOCKS5 tunnel connection.
@@ -87,26 +88,151 @@ package org.torproject.model {
 			if (request == null) {
 				return (null);
 			}//if
-			var returnString:String = new String();						
+			//Request begin
+			var returnString:String = new String();
+			//GET data
+			request.url = request.url+appendGETData(request);
 			returnString = request.method + " " + URLUtil.getResourcePath(request.url) + " " + HTTP_request_prefix + "/" + HTTP_version + lineEnd;			
+			//Headers
 			returnString += "User-Agent: " + URLRequestDefaults.userAgent + lineEnd;
-			returnString += "Host: " + URLUtil.getServerName(request.url) + lineEnd;
-			returnString += appendHeaderCookies(cookies);
-			//returnString += "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" + lineEnd;
-			//returnString += "Accept-Encoding: gzip,deflate,sdch" + lineEnd;
-			//returnString += "Accept-Language: en-US,en;q=0.8" + lineEnd;
+			returnString += "Host: " + URLUtil.getServerName(request.url) + lineEnd;		
+			//Cookies
+			if (request.manageCookies) {
+				returnString += appendHeaderCookies(cookies);		
+			}//if
 			for (var count:uint = 0; count < request.requestHeaders.length; count++) {
 				var currentHeader:URLRequestHeader = request[count] as URLRequestHeader;
 				returnString += currentHeader.name + ": " + currentHeader.value + lineEnd;
-			}//for			
-			if (request.data != null) {
-				returnString += lineEnd;
-				//This is probably formatted differently! Need to fix ASAP :)
-				returnString += request.data;
-			}//if			
-			returnString += lineEnd + lineEnd;				
-			return (returnString);
+			}//for
+			//POST data
+			var appendPostData:String = appendPOSTData(request);
+			if (request.method == URLRequestMethod.POST) {
+				returnString += "Content-Type: " + contentEncodingType(request.data) + lineEnd;
+				returnString += "Content-Length: " + String(appendPostData.length) + lineEnd;				
+				returnString +=  lineEnd + appendPostData;
+			}//if
+			//Request end
+			returnString += lineEnd + lineEnd;
+			return (returnString);			
 		}//createHTTPRequestString
+		
+		private static function contentEncodingType(data:*):String {
+			//Other types to be implemented for binary, XML, etc.	
+			return ("application/x-www-form-urlencoded");			
+		}//contentEncodingType
+		
+		/**
+		 * Creates a string from supplied data to be appended to a HTTP GET request.
+		 * 
+		 * @param	data The URLRequest from which to extrapolate GET data to send.		 
+		 * 
+		 * @return The URL GET data to be appended to the request.
+		 */
+		private static function appendGETData(request:URLRequest):String {
+			var returnString:String = new String();
+			returnString = "";
+			if (request == null) {
+				return (returnString);
+			}//if	
+			if (request.method != URLRequestMethod.GET) {
+				return (returnString);
+			}//if
+			var tempURL:String = request.url;
+			var data:*= request.data;
+			if (data is URLVariables) {
+				var vars:URLVariables = data as URLVariables;
+				for (var item:* in vars) {
+					returnString += GETDataPrefix(tempURL) + encodeURIComponent(item) + "=" + encodeURIComponent(vars[item]);
+					tempURL += returnString;
+				}//for
+				return (returnString);
+			}//if			
+			if (data is ByteArray) {
+				//Adobe doesn't support this, but we can -- unless there's a good reason not to?
+				returnString += ByteArray(data).readMultiByte(0, charSetEncoding);				
+				return (returnString);
+			}//if
+			if (data is String) {								
+				returnString += String(data); //Hopefully it's correctly formatted!
+				return (returnString);
+			}//if
+			if (data is Object) {
+				//For all other occassions...
+				for (item in data) {
+					returnString += GETDataPrefix(tempURL) + encodeURIComponent(item) + "=" + encodeURIComponent(data[item]);
+					tempURL += returnString;
+				}//for
+				return (returnString);
+			}//if
+			return (returnString);
+		}//appendGETData
+		
+		/**
+		 * Returns the appropriate variable prefix (? or &) to the supplied targetURL.
+		 * 
+		 * @param	targetURL The target URL to which the GET data will be appended.
+		 * 
+		 * @return Returns either "?" or "&" to be used to prefix URL variables in GET data.
+		 */
+		private static function GETDataPrefix(targetURL:String):String {
+			if (targetURL.indexOf("?") > -1) {
+				return ("&");
+			}//if
+			return ("?");
+		}//GETDataPrefix
+		
+		private static function appendPOSTData(request:URLRequest):String {
+			var returnString:String = new String();
+			returnString = "";
+			if (request == null) {
+				return (returnString);
+			}//if	
+			if (request.method != URLRequestMethod.POST) {
+				return (returnString);
+			}//if
+			var tempURL:String = request.url;
+			var data:*= request.data;
+			if (data is URLVariables) {
+				var vars:URLVariables = data as URLVariables;
+				for (var item:* in vars) {
+					returnString += GETDataPrefix(tempURL) + encodeURIComponent(item) + "=" + encodeURIComponent(vars[item]);
+					tempURL += returnString;
+				}//for
+				if (returnString.length > 0) {
+					returnString =  returnString;// + lineEnd;
+				}//if
+				returnString = returnString.split("?").join(""); //POST variables don't include beginning "?"
+				return (returnString);
+			}//if			
+			if (data is ByteArray) {
+				//Adobe doesn't support this, but we can -- unless there's a good reason not to?
+				returnString += ByteArray(data).readMultiByte(0, charSetEncoding);
+				if (returnString.length > 0) {
+					returnString =  returnString;// + lineEnd;
+				}//if
+				return (returnString);
+			}//if
+			if (data is String) {								
+				returnString += String(data); //Hopefully it's correctly formatted!
+				if (returnString.length > 0) {
+					returnString =  returnString;// + lineEnd;
+				}//if
+				return (returnString);
+			}//if
+			if (data is Object) {
+				//For all other occassions...
+				for (item in data) {
+					returnString += GETDataPrefix(tempURL) + encodeURIComponent(item) + "=" + encodeURIComponent(data[item]);
+					tempURL += returnString;
+				}//for
+				if (returnString.length > 0) {
+					returnString = returnString;// + lineEnd;
+				}//if
+				returnString = returnString.split("?").join("");
+				return (returnString);
+			}//if		
+			return (returnString);
+		}//appendPOSTData
 		
 		private static function appendHeaderCookies(cookies:Vector.<HTTPCookie> = null):String {
 			if (cookies == null) {
@@ -121,7 +247,7 @@ package org.torproject.model {
 				returnStr += HTTP_cookie_header + HTTPResponse.SPACE + currentCookie.name + HTTPCookie.nameValueDelimiter + currentCookie.value +lineEnd;				
 			}//for			
 			return (returnStr);
-		}
+		}//appendHeaderCookies
 				
 	}//SOCKS5Model class
 

@@ -2,12 +2,14 @@ package  {
 		
 	import flash.display.MovieClip;
 	import flash.events.Event;
+	import flash.net.URLVariables;
 	import org.torproject.events.TorControlEvent;
 	import org.torproject.model.HTTPResponseHeader;
 	import org.torproject.TorControl;
 	import org.torproject.events.SOCKS5TunnelEvent
 	import org.torproject.SOCKS5Tunnel;
-	import flash.net.URLRequest;	
+	import flash.net.URLRequest;
+	import flash.net.URLRequestMethod;
 	
 	/**
 	 * Sample class to demonstrate dynamically launching Tor network connectivity using the included
@@ -125,8 +127,16 @@ package  {
 			torControl.addEventListener(TorControlEvent.TOR_WARN, this.onTorWARNMessage);
 			torControl.addEventListener(TorControlEvent.TOR_NOTICE, this.onTorNOTICEMessage);			
 			//Create an anonymous tunnel connection for streaming HTTP requests through Tor...
-			this.tunnel = new SOCKS5Tunnel();
-			var proxyRequest:URLRequest = new URLRequest("http://www.google.com/");
+			this.tunnel = new SOCKS5Tunnel();			
+			var proxyRequest:URLRequest = new URLRequest("http://patrickbay.ca/TorAS/echoservice/");
+			//Create some variables to send with the request...
+			var variables:URLVariables = new URLVariables();			
+			variables.query = "TorAS ActionScript Library";		
+			variables.url = "https://code.google.com/p/toras/";
+			variables.dateTime = new Date().toString();
+			//Set submission method to POST...
+			proxyRequest.method = URLRequestMethod.POST;
+			proxyRequest.data = variables;			
 			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPRESPONSE, this.onHTTPResponse);
 			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPREDIRECT, this.onHTTPRedirect);
 			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONDISCONNECT, this.onSOCKS5TunnelDisconnect);

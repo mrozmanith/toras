@@ -20,6 +20,9 @@ package org.torproject {
 	import flash.net.URLVariables;
 	import org.torproject.utils.URLUtil;	
 	
+	// TLS/SSL courtesy of as3crypto
+	import com.hurlant.crypto.tls.*;
+	
 	/**
 	 * Provides SOCKS5-capable transport services for proxied network requests. This protocol is also used by Tor to transport
 	 * various network requests.
@@ -32,7 +35,7 @@ package org.torproject {
 	public class SOCKS5Tunnel extends EventDispatcher {
 		
 		public static const defaultSOCKSIP:String = "127.0.0.1";
-		public static const defaultSOCKSPort:int = 1080;
+		public static const defaultSOCKSPort:int = 1080; //This may not be the standard port -- double check!
 		public static const maxRedirects:int = 5;
 		private var _tunnelSocket:Socket = null;
 		private var _tunnelIP:String = null;
@@ -143,7 +146,7 @@ package org.torproject {
 		private function disconnectSocket():void {			
 			this._connected = false;
 			this._authenticated = false;
-			this._tunneled = false;		
+			this._tunneled = false;			
 			if (this._tunnelSocket != null) {
 				this.removeSocketListeners();
 				this._tunnelSocket.close();
@@ -151,7 +154,7 @@ package org.torproject {
 				var eventObj:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONDISCONNECT);
 				this.dispatchEvent(eventObj);
 			}//if			
-		}
+		}//disconnectSocket
 		
 		private function removeSocketListeners():void {
 			if (this._tunnelSocket == null) { return;}
@@ -198,10 +201,7 @@ package org.torproject {
 			this.removeSocketListeners();			
 			this._connected = false;
 			this._authenticated = false;
-			this._tunneled = false;
-			this._tunnelSocket.removeEventListener(Event.CONNECT, this.onTunnelConnect);
-			this._tunnelSocket.removeEventListener(Event.CLOSE, this.onTunnelDisconnect);
-			this._tunnelSocket.addEventListener(ProgressEvent.SOCKET_DATA, this.onTunnelData);
+			this._tunneled = false;			
 			this._tunnelSocket = null;
 			var connectEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONDISCONNECT);
 			this.dispatchEvent(connectEvent);			
@@ -263,10 +263,20 @@ package org.torproject {
 				requestString = SOCKS5Model.createHTTPRequestString(currentRequest, null);
 			}//else
 			this._HTTPResponse = new HTTPResponse();
-			
-			this._tunnelSocket.writeMultiByte(requestString, SOCKS5Model.charSetEncoding);			
-			this._tunnelSocket.flush();
+			if (URLUtil.isHttpsURL(this._currentRequest.url)) {
+				this.startTLSTunnel();
+			} else {
+				this._tunnelSocket.writeMultiByte(requestString, SOCKS5Model.charSetEncoding);			
+				this._tunnelSocket.flush();
+			}//else
 		}//sendQueuedHTTPRequest
+		
+		/**
+		 * Starts the TLS tunnel for HTTPS requests/responses.
+		 */
+		private function startTLSTunnel():void {
+			
+		}//startTLSTunnel
 		
 		private function authResponseOkay(respData:ByteArray):Boolean {
 			respData.position = 0;
