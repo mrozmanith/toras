@@ -49,9 +49,9 @@ package org.torproject  {
 		private static var torProcess:NativeProcess = null; //Native process running core Tor services
 		private var _launchServices:Boolean = true;
 		private static const defaultControlIP:String = "127.0.0.1"; //Default control IP (usually 127.0.0.1)
-		private static const defaultControlPort:int = 9151; //Default control port (usualy 9151)
+		private static const defaultControlPort:int = 9051; //Default control port (usualy 9051)
 		private static const defaultSOCKSIP:String = "127.0.0.1"; //Default SOCKS IP (usually 127.0.0.1)
-		private static const defaultSOCKSPort:int = 1080; //Default SOCKS port (should double check this, probably not standard)
+		private static const defaultSOCKSPort:int = 1080; //Default SOCKS5 port (usually 1080)
 		//Default assignments...
 		private static var _controlIP:String = defaultControlIP; 
 		private static var _controlPort:int = defaultControlPort;
@@ -268,7 +268,7 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		 */
 		public static function get SOCKSPort():int {
 			return (_SOCKSPort);
-		}//get SOCKSPort		
+		}//get SOCKSPort	
 		
 		/**
 		 * The status of the Tor control connection: true=connected, false=not connected
@@ -283,6 +283,16 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		public static function get authenticated():Boolean {
 			return (_authenticated);
 		}//get authenticated
+		
+		/**
+		 * Establish a new Tor circuit through which future requests will be tunneled. Any existing tunnels will continue
+		 * to use their existing circuits until disconnected.
+		 */
+		public function establishNewCircuit():void {
+			if (connected && authenticated) {
+				this.sendRawControlMessage(TorControlModel.getControlMessage("newcircuit")); 	
+			}//if
+		}//establishNewCircuit
 		
 		/**
 		 * Generates the Tor config file from settings derived from various class properties (see near top of this class declaration).
@@ -525,7 +535,7 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 			try {
 				var eventType:String = msgObj.body;				
 				eventType = eventType.split(" ")[0] as String;							
-				var torEventType:String = TorControlEvent.getTorEventLongcode(eventType);				
+				var torEventType:String = TorControlEvent.getTorEventLongcode(eventType);
 				if (torEventType == null) {
 					return;
 				}//if				

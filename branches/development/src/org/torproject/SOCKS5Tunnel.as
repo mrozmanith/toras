@@ -8,6 +8,7 @@ package org.torproject {
 	import flash.events.IOErrorEvent;	
 	import flash.events.SecurityErrorEvent;	
 	import flash.utils.ByteArray;
+	import flash.utils.getDefinitionByName;
 	import org.torproject.events.SOCKS5TunnelEvent;
 	import org.torproject.model.HTTPResponse;
 	import org.torproject.model.HTTPResponseHeader;
@@ -31,11 +32,32 @@ package org.torproject {
 	 * SOCKS5Tunnel can be used completely independently (TorControl may be entirely omitted).
 	 * 
 	 * @author Patrick Bay
+	  * The MIT License (MIT)
+	 * 
+	 * Copyright (c) 2013 Patrick Bay
+	 * 
+	 * Permission is hereby granted, free of charge, to any person obtaining a copy
+	 * of this software and associated documentation files (the "Software"), to deal
+	 * in the Software without restriction, including without limitation the rights
+	 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	 * copies of the Software, and to permit persons to whom the Software is
+	 * furnished to do so, subject to the following conditions:
+	 * 
+	 * The above copyright notice and this permission notice shall be included in
+	 * all copies or substantial portions of the Software.
+	 * 
+	 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	 * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+	 * THE SOFTWARE. 
 	 */
 	public class SOCKS5Tunnel extends EventDispatcher {
 		
 		public static const defaultSOCKSIP:String = "127.0.0.1";
-		public static const defaultSOCKSPort:int = 1080; //This may not be the standard port -- double check!
+		public static const defaultSOCKSPort:int = 1080; //Standard SOCKS5 port
 		public static const maxRedirects:int = 5;
 		private var _tunnelSocket:Socket = null;
 		private var _tunnelIP:String = null;
@@ -117,7 +139,7 @@ package org.torproject {
 			if (request == null) {
 				return (false);
 			}//if			
-			try {
+			try {				
 				this._requestBuffer.push(request);			
 				this._responseBuffer = new ByteArray();
 				this._HTTPStatusReceived = false;
@@ -139,17 +161,48 @@ package org.torproject {
 			return (false);
 		}//loadHTTP		
 		
+		/**
+		 * The currently active HTTP/HTTPS request being handled by the tunnel instance.
+		 */
 		public function get activeRequest():* {
 			return (this._currentRequest);
 		}//get activeRequest
 		
-		private function disconnectSocket():void {			
+		/**
+		 * Attempts to establish a new Tor circuit through a running TorControl instance. 
+		 * Future SOCKS5Tunnel instances will communicate through the new circuit while 
+		 * existing and connected instances will continue to communicate through their existing circuits.
+		 * A TorControl instance must be instantiated and fully initialized before attempting
+		 * to invoke this command.
+		 * 
+		 * @return True if TorControl is active and could be invoked to establish a new circuit, false
+		 * if the invocation failed for any reason.
+		 */
+		public function establishNewCircuit():Boolean {
+			try {
+				//Dynamically evaluate so that there are no dependencies
+				var tcClass:Class = getDefinitionByName("org.torproject.TorControl") as Class;
+				if (tcClass == null) {
+					return (false);
+				}//if
+				var tcInstance:*= new tcClass();
+				if (tcClass.connected && tcClass.authenticated) {
+					tcInstance.establishNewCircuit();
+					return (true);
+				}//if
+			} catch (err:*) {
+				return (false);
+			}//catch
+			return (false);
+		}//establishNewCircuit
+		
+		private function disconnectSocket():void {						
 			this._connected = false;
 			this._authenticated = false;
 			this._tunneled = false;			
 			if (this._tunnelSocket != null) {
 				this.removeSocketListeners();
-				this._tunnelSocket.close();
+				this._tunnelSocket.close();				
 				this._tunnelSocket = null;
 				var eventObj:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONDISCONNECT);
 				this.dispatchEvent(eventObj);
@@ -197,14 +250,14 @@ package org.torproject {
 			this.dispatchEvent(errorEventObj);
 		}//onTunnelConnectError
 		
-		private function onTunnelDisconnect(eventObj:Event):void {						
+		private function onTunnelDisconnect(eventObj:Event):void {				
 			this.removeSocketListeners();			
 			this._connected = false;
 			this._authenticated = false;
 			this._tunneled = false;			
-			this._tunnelSocket = null;
-			var connectEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONDISCONNECT);
-			this.dispatchEvent(connectEvent);			
+			this._tunnelSocket = null;			
+			var disconnectEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONDISCONNECT);
+			this.dispatchEvent(disconnectEvent);			
 		}//onTunnelData			
 		
 		private function authenticateTunnel():void {			
@@ -316,7 +369,7 @@ package org.torproject {
 				return (true);
 			}//if
 			return (false);
-		}
+		}//tunnelRequestComplete
 		
 		private function handleHTTPRedirect(responseObj:HTTPResponse):Boolean {
 			if (this._currentRequest.followRedirects) {				
@@ -378,12 +431,12 @@ package org.torproject {
 			var dataEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONHTTPRESPONSE);			
 			dataEvent.httpResponse = this._HTTPResponse;	
 			dataEvent.httpResponse.rawResponse = new ByteArray();
-			dataEvent.httpResponse.rawResponse.writeBytes(this._responseBuffer);			
+			dataEvent.httpResponse.rawResponse.writeBytes(this._responseBuffer);	
+			this.disconnectSocket();
 			this.dispatchEvent(dataEvent);	
 			this._responseBuffer = new ByteArray();		
 			this._HTTPStatusReceived = false;
 			this._HTTPHeadersReceived = false;			
-			this.disconnectSocket();
 		}//handleHTTPResponse
 		
 		private function onTunnelData(eventObj:ProgressEvent):void {

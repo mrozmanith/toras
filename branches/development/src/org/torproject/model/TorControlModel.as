@@ -36,6 +36,7 @@ package org.torproject.model {
 		<TorControlTable>
 			<message type="authenticate">AUTHENTICATE</message>
 			<message type="shutdown">SIGNAL SHUTDOWN</message>
+			<message type="newcircuit">SIGNAL NEWNYM</message>
 			<message type="enableevent">SETEVENTS EXTENDED %event_list%</message>
 		</TorControlTable>
 		
@@ -66,7 +67,7 @@ package org.torproject.model {
 		//Protocol constants
 		public static const charSetEncoding:String = "iso-8859-1";
 		public static const controlLineEnd:String = String.fromCharCode(13) + String.fromCharCode(10);
-		public static const asynchEventStatusCode:int = 650; //Should be the same as in TorResponseTable data
+		public static const asynchEventStatusCode:int = 650; //Should be the same as in TorResponseTable data		
 		
 		/**
 		 * Looks up a control message, as defined in the TorControlTable XML data, using a static mnemonic.

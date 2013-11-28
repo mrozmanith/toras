@@ -1,20 +1,14 @@
 package  {
 		
-	import flash.display.MovieClip;
-	import flash.events.Event;
-	import flash.net.URLVariables;
-	import org.torproject.events.TorControlEvent;
-	import org.torproject.model.HTTPResponseHeader;
-	import org.torproject.TorControl;
-	import org.torproject.events.SOCKS5TunnelEvent
-	import org.torproject.SOCKS5Tunnel;
-	import flash.net.URLRequest;
-	import flash.net.URLRequestMethod;
+	import flash.display.MovieClip;	
+	import org.torproject.events.TorControlEvent;	
+	import org.torproject.TorControl;	
+	import demos.HTTPLoadDemo;
 	
 	/**
 	 * Sample class to demonstrate dynamically launching Tor network connectivity using the included
-	 * application package within an AIR app, then using it to both send and receive HTTP requests as 
-	 * well control the Tor network client via its public API.
+	 * application package within an AIR app. Additional demos are included as separate classes and
+	 * can be uncommented below as desired.
 	 * 
 	 * @author Patrick Bay
 	 * 
@@ -42,12 +36,15 @@ package  {
 	 */
 	public class Main extends MovieClip {
 		
-		private static var torControl:TorControl = null;
-		private var tunnel:SOCKS5Tunnel = null;
+		private static var torControl:TorControl = null;		
 		
 		public function Main() {
 			this.launchTorControl();	
 		}			
+		
+		private function onTorLogMessage(eventObj:TorControlEvent):void {
+			trace ("Tor.exe log: " + eventObj.body);
+		}
 		
 		private function launchTorControl():void {
 			if (torControl==null) {
@@ -59,88 +56,11 @@ package  {
 			}//if
 		}
 						
-		private function onHTTPResponse(eventObj:SOCKS5TunnelEvent):void {
-			trace ("--------------------------------------------------------");
-			trace ("Loaded via Tor: ");
-			trace(" ");
-			trace ("STATUS: " + eventObj.httpResponse.statusCode + " " + eventObj.httpResponse.status);
-			trace(" ");
-			trace ("HEADERS: ");
-			trace(" ");
-			if (eventObj.httpResponse.headers!=null) {
-				for (var count:uint = 0; count < eventObj.httpResponse.headers.length; count++) {
-					var httpHeader:HTTPResponseHeader = eventObj.httpResponse.headers[count];
-					trace (httpHeader.name + ": " + httpHeader.value);
-				}//for
-			} else {
-				trace ("No response headers -- either a bad response or a severe error.");
-			}
-			trace(" ");			
-			trace ("RESPONSE BODY: ");
-			trace(" ");
-			trace (eventObj.httpResponse.body);		
-			trace ("--------------------------------------------------------");		
-		}
-		
-		/* PRIVATE */
-		private function onHTTPRedirect(eventObj:SOCKS5TunnelEvent):void {
-			trace ("Received HTTP redirect error " + eventObj.httpResponse.statusCode);
-			trace ("Redirecting to: " + SOCKS5Tunnel(eventObj.target).activeRequest.url);			
-			var headers:Vector.<HTTPResponseHeader> = eventObj.httpResponse.headers;
-			trace ("HEADERS >>>");
-			for (var count:uint = 0; count < headers.length; count++) {
-				trace (headers[count].name + ": " + headers[count].value);
-			}
-		}
-		
-		/* PRIVATE */
-		private function onSOCKS5TunnelDisconnect(eventObj:SOCKS5TunnelEvent):void {
-			trace ("SOCKS5 tunnel disconnected.");			
-		}
-		
-		/* PRIVATE */
-		private function onTorLogMessage(eventObj:TorControlEvent):void {
-			//STDOUT log from Tor -- only available if we're launching the process using TorControl
-			trace (TorControl.executable + " > "+eventObj.rawMessage);
-		}
-		
-		/* PRIVATE */
-		private function onTorWARNMessage(eventObj:TorControlEvent):void {
-			trace ("Tor WARN event: "+eventObj.body);
-		}
-		
-		/* PRIVATE */
-		private function onTorINFOMessage(eventObj:TorControlEvent):void {
-			trace ("Tor INFO event: "+eventObj.body);
-		}
-		
-		/* PRIVATE */
-		private function onTorNOTICEMessage(eventObj:TorControlEvent):void {
-			trace ("Tor NOTICE event: "+eventObj.body);
-		}
-				
-		/* PRIVATE */
 		private function onTorControlReady(eventObj:TorControlEvent):void {
 			trace ("Main.as > TorControl is connected, authenticated, and ready for commands.");
-			//Listen for some internal Tor events...
-			torControl.addEventListener(TorControlEvent.TOR_INFO, this.onTorINFOMessage);
-			torControl.addEventListener(TorControlEvent.TOR_WARN, this.onTorWARNMessage);
-			torControl.addEventListener(TorControlEvent.TOR_NOTICE, this.onTorNOTICEMessage);			
-			//Create an anonymous tunnel connection for streaming HTTP requests through Tor...
-			this.tunnel = new SOCKS5Tunnel();			
-			var proxyRequest:URLRequest = new URLRequest("http://patrickbay.ca/TorAS/echoservice/");
-			//Create some variables to send with the request...
-			var variables:URLVariables = new URLVariables();			
-			variables.query = "TorAS ActionScript Library";		
-			variables.url = "https://code.google.com/p/toras/";
-			variables.dateTime = new Date().toString();
-			//Set submission method to POST...
-			proxyRequest.method = URLRequestMethod.POST;
-			proxyRequest.data = variables;			
-			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPRESPONSE, this.onHTTPResponse);
-			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPREDIRECT, this.onHTTPRedirect);
-			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONDISCONNECT, this.onSOCKS5TunnelDisconnect);
-			this.tunnel.loadHTTP(proxyRequest);
+			//Uncomment the demo(s) that you would like to try...
+			var demo1:HTTPLoadDemo = new HTTPLoadDemo();
+			
 		}	
 		
 	}
