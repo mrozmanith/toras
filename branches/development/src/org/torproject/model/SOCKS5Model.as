@@ -133,7 +133,8 @@ package org.torproject.model {
 			returnString = "";
 			if (request == null) {
 				return (returnString);
-			}//if	
+			}//if
+			
 			if (request.method != URLRequestMethod.GET) {
 				return (returnString);
 			}//if

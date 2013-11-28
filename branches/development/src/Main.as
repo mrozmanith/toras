@@ -57,10 +57,9 @@ package  {
 		}
 						
 		private function onTorControlReady(eventObj:TorControlEvent):void {
-			trace ("Main.as > TorControl is connected, authenticated, and ready for commands.");
+			trace ("Main.as > TorControl is connected, authenticated, and ready for commands.");			
 			//Uncomment the demo(s) that you would like to try...
 			var demo1:HTTPLoadDemo = new HTTPLoadDemo();
-			
 		}	
 		
 	}

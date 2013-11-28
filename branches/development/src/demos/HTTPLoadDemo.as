@@ -37,10 +37,8 @@ package demos {
 	 * THE SOFTWARE. 
 	 */
 	public class HTTPLoadDemo {
-		
-		private static var torControl:TorControl = null;
-		private var tunnel:SOCKS5Tunnel = null;
-		private var tunnel2:SOCKS5Tunnel = null;
+				
+		private var tunnel:SOCKS5Tunnel = null;		
 		
 		public function HTTPLoadDemo() {
 			this.sendHTTPRequest();	
@@ -66,8 +64,7 @@ package demos {
 			trace ("RESPONSE BODY: ");
 			trace(" ");
 			trace (eventObj.httpResponse.body);		
-			trace ("--------------------------------------------------------");	
-			torControl.establishNewCircuit();
+			trace ("--------------------------------------------------------");			
 		}
 		
 		/* PRIVATE */
