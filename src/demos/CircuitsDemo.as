@@ -42,7 +42,7 @@ package  {
 		private var tunnel:SOCKS5Tunnel = null;
 		private var tunnel2:SOCKS5Tunnel = null;
 		
-		public function Main() {
+		public function CircuitsDemo() {
 			this.launchTorControl();	
 		}			
 		
