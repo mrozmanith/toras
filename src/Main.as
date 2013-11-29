@@ -1,9 +1,14 @@
 package  {
 		
+	import com.hurlant.crypto.hash.MD5;
 	import flash.display.MovieClip;	
+	import flash.utils.ByteArray;
 	import org.torproject.events.TorControlEvent;	
 	import org.torproject.TorControl;	
 	import demos.HTTPLoadDemo;
+	import demos.CircuitsDemo;
+	import com.hurlant.crypto.hash.*;
+	import com.hurlant.util.*;
 	
 	/**
 	 * Sample class to demonstrate dynamically launching Tor network connectivity using the included
@@ -38,20 +43,20 @@ package  {
 		
 		private static var torControl:TorControl = null;		
 		
-		public function Main() {
+		public function Main() {			
 			this.launchTorControl();	
 		}			
 		
 		private function onTorLogMessage(eventObj:TorControlEvent):void {
-			trace ("Tor.exe log: " + eventObj.body);
+			trace ("Tor log: " + eventObj.body);
 		}
 		
 		private function launchTorControl():void {
 			if (torControl==null) {
-				torControl = new TorControl();
+				torControl = new TorControl(null, -1, null, -1, "TorControlConnectionPassword"); //Use default connection values and custom connection password
 				//We want to listen to .ONAUTHENTICATE since .ONCONNECT only signals that a connection has been established.
+				torControl.addEventListener(TorControlEvent.ONLOGMSG, this.onTorLogMessage);
 				torControl.addEventListener(TorControlEvent.ONAUTHENTICATE, this.onTorControlReady);
-				torControl.addEventListener(TorControlEvent.ONLOGMSG, this.onTorLogMessage);			
 				torControl.connect();
 			}//if
 		}
@@ -59,7 +64,8 @@ package  {
 		private function onTorControlReady(eventObj:TorControlEvent):void {
 			trace ("Main.as > TorControl is connected, authenticated, and ready for commands.");			
 			//Uncomment the demo(s) that you would like to try...
-			var demo1:HTTPLoadDemo = new HTTPLoadDemo();
+			//var demo1:HTTPLoadDemo = new HTTPLoadDemo();
+			//var demo2:CircuitsDemo = new CircuitsDemo();
 		}	
 		
 	}
