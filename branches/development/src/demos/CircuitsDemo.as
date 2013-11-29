@@ -1,13 +1,7 @@
-package  {
-			
-	import flash.net.URLVariables;
-	import org.torproject.events.TorControlEvent;
-	import org.torproject.model.HTTPResponseHeader;
+package demos {
+				
 	import org.torproject.TorControl;
-	import org.torproject.events.SOCKS5TunnelEvent
-	import org.torproject.SOCKS5Tunnel;
-	import flash.net.URLRequest;
-	import flash.net.URLRequestMethod;
+	import org.torproject.events.TorControlEvent;	
 	
 	/**
 	 * Demonstrates how to work with Tor circuits.
@@ -36,65 +30,12 @@ package  {
 	 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 	 * THE SOFTWARE. 
 	 */
-	public class CircuitsDemo {
+	public class CircuitsDemo {		
 		
-		private static var torControl:TorControl = null;
-		private var tunnel:SOCKS5Tunnel = null;
-		private var tunnel2:SOCKS5Tunnel = null;
-		
-		public function CircuitsDemo() {
-			this.launchTorControl();	
+		public function CircuitsDemo() {	
+		//	torControl.addEventListener(TorControlEvent.TOR_CIRC, this.onTorCIRCMessage);	
 		}			
-		
-		private function launchTorControl():void {
-			if (torControl==null) {
-				torControl = new TorControl();
-				//We want to listen to .ONAUTHENTICATE since .ONCONNECT only signals that a connection has been established.
-				torControl.addEventListener(TorControlEvent.ONAUTHENTICATE, this.onTorControlReady);
-				torControl.addEventListener(TorControlEvent.ONLOGMSG, this.onTorLogMessage);			
-				torControl.connect();
-			}//if
-		}
-						
-		private function onHTTPResponse(eventObj:SOCKS5TunnelEvent):void {
-			trace ("--------------------------------------------------------");
-			trace ("Loaded via Tor: ");
-			trace(" ");
-			trace ("STATUS: " + eventObj.httpResponse.statusCode + " " + eventObj.httpResponse.status);
-			trace(" ");
-			trace ("HEADERS: ");
-			trace(" ");
-			if (eventObj.httpResponse.headers!=null) {
-				for (var count:uint = 0; count < eventObj.httpResponse.headers.length; count++) {
-					var httpHeader:HTTPResponseHeader = eventObj.httpResponse.headers[count];
-					trace (httpHeader.name + ": " + httpHeader.value);
-				}//for
-			} else {
-				trace ("No response headers -- either a bad response or a severe error.");
-			}
-			trace(" ");			
-			trace ("RESPONSE BODY: ");
-			trace(" ");
-			trace (eventObj.httpResponse.body);		
-			trace ("--------------------------------------------------------");	
-			torControl.establishNewCircuit();
-		}
-		
-		/* PRIVATE */
-		private function onHTTPRedirect(eventObj:SOCKS5TunnelEvent):void {
-			trace ("Received HTTP redirect error " + eventObj.httpResponse.statusCode);
-			trace ("Redirecting to: " + SOCKS5Tunnel(eventObj.target).activeRequest.url);			
-			var headers:Vector.<HTTPResponseHeader> = eventObj.httpResponse.headers;
-			trace ("HEADERS >>>");
-			for (var count:uint = 0; count < headers.length; count++) {
-				trace (headers[count].name + ": " + headers[count].value);
-			}
-		}
-		
-		/* PRIVATE */
-		private function onSOCKS5TunnelDisconnect(eventObj:SOCKS5TunnelEvent):void {
-			trace ("SOCKS5 tunnel disconnected.");		
-		}
+				
 		
 		/* PRIVATE */
 		private function onTorLogMessage(eventObj:TorControlEvent):void {
@@ -119,40 +60,15 @@ package  {
 		
 		/* PRIVATE */
 		private function onTorCIRCMessage(eventObj:TorControlEvent):void {
-			trace ("Tor CIRC event: " + eventObj.body);			
+		//	trace ("Tor CIRC event: " + eventObj.body);			
 			//Created another circuit, send out next request...
-			var proxyRequest:URLRequest = new URLRequest("http://patrickbay.ca/TorAS/echoservice/");
-			var variables:URLVariables = new URLVariables();			
-			variables.query = "Another request on another circuit";						
-			proxyRequest.method = URLRequestMethod.GET;
-			proxyRequest.data = variables;						
-			this.tunnel.loadHTTP(proxyRequest);		
+		//	var proxyRequest:URLRequest = new URLRequest("http://patrickbay.ca/TorAS/echoservice/");
+		//	var variables:URLVariables = new URLVariables();			
+		//	variables.query = "Another request on another circuit";						
+		//	proxyRequest.method = URLRequestMethod.GET;
+		//	proxyRequest.data = variables;						
+		//	this.tunnel.loadHTTP(proxyRequest);		
 		}
-				
-		/* PRIVATE */
-		private function onTorControlReady(eventObj:TorControlEvent):void {
-			trace ("Main.as > TorControl is connected, authenticated, and ready for commands.");
-			//Listen for some internal Tor events...
-			torControl.addEventListener(TorControlEvent.TOR_INFO, this.onTorINFOMessage);
-			torControl.addEventListener(TorControlEvent.TOR_WARN, this.onTorWARNMessage);
-			torControl.addEventListener(TorControlEvent.TOR_NOTICE, this.onTorNOTICEMessage);			
-			torControl.addEventListener(TorControlEvent.TOR_CIRC, this.onTorCIRCMessage);	
-			//Create an anonymous tunnel connection for streaming HTTP requests through Tor...
-			this.tunnel = new SOCKS5Tunnel();			
-			var proxyRequest:URLRequest = new URLRequest("http://patrickbay.ca/TorAS/echoservice/");
-			//Create some variables to send with the request...
-			var variables:URLVariables = new URLVariables();			
-			variables.query = "TorAS ActionScript Library";		
-			variables.url = "https://code.google.com/p/toras/";
-			variables.dateTime = new Date().toString();
-			//Set submission method to POST...
-			proxyRequest.method = URLRequestMethod.POST;
-			proxyRequest.data = variables;			
-			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPRESPONSE, this.onHTTPResponse);
-			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPREDIRECT, this.onHTTPRedirect);
-			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONDISCONNECT, this.onSOCKS5TunnelDisconnect);
-			this.tunnel.loadHTTP(proxyRequest);			
-		}	
 		
 	}
 

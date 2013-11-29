@@ -46,7 +46,7 @@ package org.torproject  {
 	 */
 	public class TorControl extends EventDispatcher {
 		
-		private static var torProcess:NativeProcess = null; //Native process running core Tor services
+		private static var torProcess:NativeProcess = null; //Native process running core Tor services		
 		private var _launchServices:Boolean = true;
 		private static const defaultControlIP:String = "127.0.0.1"; //Default control IP (usually 127.0.0.1)
 		private static const defaultControlPort:int = 9051; //Default control port (usualy 9051)
@@ -56,17 +56,17 @@ package org.torproject  {
 		private static var _controlIP:String = defaultControlIP; 
 		private static var _controlPort:int = defaultControlPort;
 		private static var _SOCKSIP:String = defaultSOCKSIP; 
-		private static var _SOCKSPort:int = defaultSOCKSPort;
-		private static var _controlPassHash:String = ""; //Password hash (not yet implemented)
+		private static var _SOCKSPort:int = defaultSOCKSPort;		
 		private static var _socket:Socket = null; //The actual control socket
+		private static var _controlPasswordHash:String = null; //Control socket password hash
+		private static var _controlPassword:String = null; //Control socket password (un-hashed)
 		private var _connectDelay:Number = 1; //The delay, in seconds, to hold before attempting to connect to the control socket
 		//Both of the following must be true before further commands can be issued:
 		private static var _connected:Boolean = false; //Is control socket connected?
 		private static var _authenticated:Boolean = false; //Has control socket authenticated?
 		public static const rootTorPath:String = "./Tor_x86/"; //Relative path (to the output SWF / AIR file) to the Tor binary directory
 		public static const executable:String = "tor.exe"; //Differs based on OS -- how best to dynamically control this?
-		public static const configFile:String = "torrc"; //Standard config file name
-		public static const controlPassHash:String = ""; //Control socket password hash (not yet implemented)
+		public static const configFile:String = "torrc"; //Standard config file name		
 		/**
 		 * The contents of the <config> node are parsed and used to generate the config file (specified above).
 		 * Meta information may be included in the information. This includes:
@@ -75,14 +75,16 @@ package org.torproject  {
 		 * %control_port% - The control port currently being used by the TorControl instance and running Tor services.
 		 * %socks_ip% - The SOCKS IP currently being used by the running Tor proxy.
 		 * %socks_port% - The SOCKS port currently being used by the running Tor proxy.
-		 * %control_passhash% - The control pasword authentication hash (not yet supported)
+		 * %control_passhash% - The control pasword authentication hash.
 		 */
 		public static var configData:XML =<config><![CDATA[# TorAS Dynamic Configuration -- TorControl.configData
 ControlPort %control_port%
 ControlListenAddress %control_ip%
 ClientOnly 1
 SOCKSListenAddress %socks_ip%:%socks_port%
+HashedControlPassword %control_passhash%
 ]]></config>
+		private var _torPHProcess:NativeProcess = null; //Password hash process
 		private var _synchResponseBuffer:String = new String(); //Used to buffer multi-line messages
 		private var _asynchEventBuffer:String = new String(); //Used to buffer multi-line asynchronous messages
 		private var _synchRawResponseBuffer:String = new String(); //Used to buffer multi-line messages in their raw state
@@ -92,21 +94,38 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		/**
 		 * Creates an instance of TorControl.
 		 * 
-		 * @param	controlIP The control IP of the running Tor process.
-		 * @param	controlPort The control port of the running Tor process.
-		 * @param	SOCKSIP The SOCKS5 IP of the running Tor proxy.
-		 * @param	SOCKSPort The SOCKS5 port of the running Tor proxy.
-		 * @param	controlPassHash The control hashed password required to access the Tor process control connection.
+		 * @param	controlIP The control IP of the running Tor process. An empty or null string will cause the default value to be used.
+		 * @param	controlPort The control port of the running Tor process. A negative value will cause the default value to be used.
+		 * @param	SOCKSIP The SOCKS5 IP of the running Tor proxy. An empty or null string will cause the default value to be used.
+		 * @param	SOCKSPort The SOCKS5 port of the running Tor proxy. A negative value will cause the default value to be used.
+		 * @param	controlPass The control password (raw, or unhashed) required to access the Tor process control connection.
 		 * @param	connectDelay Delay, in seconds, to wait to attempt to connect to the Tor control socket (allows Tor process to be started).
 		 */
 		public function TorControl(controlIP:String = defaultControlIP, controlPort:int = defaultControlPort, 
-									SOCKSIP:String=defaultSOCKSIP, SOCKSPort:int=defaultSOCKSPort,
-									controlPassHash:String="", connectDelay:Number=1) {
-			_controlIP = controlIP;
-			_controlPort = controlPort;
-			_SOCKSIP = SOCKSIP;
-			_SOCKSPort = SOCKSPort;
-			_controlPassHash = controlPassHash;
+									SOCKSIP:String = defaultSOCKSIP, SOCKSPort:int=defaultSOCKSPort,
+									controlPass:String = null, connectDelay:Number = 0) {
+										
+			if ((controlIP == null) || (controlIP == "")) {
+				_controlIP = defaultControlIP
+			} else {
+				_controlIP = controlIP;
+			}//else
+			if (controlPort<0) {
+				controlPort = defaultControlPort;
+			} else {
+				_controlPort = controlPort;
+			}//else
+			if ((SOCKSIP == null) || (SOCKSIP == "")) {
+				_SOCKSIP = defaultSOCKSIP;
+			} else {
+				_SOCKSIP = SOCKSIP;
+			}//else
+			if (SOCKSPort<0) {
+				_SOCKSPort = defaultSOCKSPort;
+			} else {
+				_SOCKSPort = SOCKSPort;
+			}//else
+			_controlPassword = controlPass;		
 			this._connectDelay = connectDelay*1000;
 		}//constructor
 		
@@ -129,13 +148,50 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 			return (configData);
 		}//get config
 		
+		private function getPasswordHash(input:String):void {			
+			if (this._torPHProcess != null) {
+				this._torPHProcess.removeEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, this.onHashPassword);
+				this._torPHProcess = null;
+			}//if			
+			var launchInfo:NativeProcessStartupInfo = new NativeProcessStartupInfo();
+			var exeDirectory:File = File.applicationDirectory;
+			var exeFile:File = File.applicationDirectory;				
+			exeFile = exeFile.resolvePath(rootTorPath + executable);
+			exeDirectory = exeDirectory.resolvePath(rootTorPath);								
+			launchInfo.executable = exeFile;
+			launchInfo.workingDirectory = exeDirectory;
+			launchInfo.arguments.push("--hash-password");
+			launchInfo.arguments.push(input);
+			launchInfo.arguments.push("--quiet");
+			this._torPHProcess = new NativeProcess();
+			//Debug and log data are received over STDOUT
+			this._torPHProcess.addEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, this.onHashPassword);
+			this._torPHProcess.start(launchInfo);
+		}//getPasswordHash
+		
+		private function onHashPassword(eventObj:ProgressEvent):void {
+			_controlPasswordHash = this._torPHProcess.standardOutput.readMultiByte(this._torPHProcess.standardOutput.bytesAvailable, TorControlModel.charSetEncoding);			
+			if (this._torPHProcess.running) {
+				this._torPHProcess.exit(true);
+			}//if
+			this._torPHProcess.removeEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, this.onHashPassword);
+			this._torPHProcess = null;		
+			this.launchTorProcess();
+		}//onHashPassword
+		
 		/**
 		 * Attempts to connect to the running Tor control process via pre-set (in constructor) socket settings.
-		 * 
-		 * @param	... args Used internally to apply a startup delay. Set to true to bypass any startup delay (connect immediately).
 		 */
-		public function connect(... args):void {
-			this.launchTorProcess();
+		public function connect():void {
+			this.prepareTorProcess();		
+		}//connect
+		
+		/**
+		 * Invoked when the Tor process is ready to accept a connection (for example, the process was successfully launched).
+		 * 
+		 * @param	... args Used internally to apply a startup delay. Set to true to bypass any startup delay (connect immediately).		 
+		 */
+		private function onTorControlReady(... args):void {
 			if (_socket == null) {
 				if ((this._connectDelay > 0) && (args[0]!=true)){
 					setTimeout(this.connect, this._connectDelay, true);					
@@ -152,7 +208,7 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 				}//catch
 			} else {				
 			}//else
-		}//connect
+		}//onTorControlReady
 		
 		/**
 		 * Disconnects from the Tor control socket. Note that the Tor service may still be running at this point.
@@ -184,6 +240,25 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		}//get launchServices
 		
 		/**
+		 * Prepares to launch the Tor process using supplied initialization data.
+		 */
+		public function prepareTorProcess():void {
+			if (!this._launchServices) {
+				this.onTorControlReady();
+				return;
+			}//if
+			if (torProcess != null) {
+				this.onTorControlReady();
+				return;
+			}//if
+			if (NativeProcess.isSupported) {
+				this.getPasswordHash(_controlPassword);
+			} else {			
+				this.onTorControlReady();
+			}//else
+		}//prepareTorProcess
+		
+		/**
 		 * Attempts to launch the Tor process (binary). TorControl can communicate with a properly configured 
 		 * Tor process even if it didn't launch it. Developers can bypass this method altogether if the Tor 
 		 * process will be started manually. Be sure to update the TorControl <code>config</code> property 
@@ -191,15 +266,17 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		 * This function also starts listening to the Event.EXITING event on the native application object if
 		 * the Tor process was successfully launched.
 		 */
-		public function launchTorProcess():void {
+		private function launchTorProcess():void {			
 			if (!this._launchServices) {
+				this.onTorControlReady();
 				return;
 			}//if
-			if (torProcess != null) {
+			if (torProcess != null) {				
+				this.onTorControlReady();
 				return;
 			}//if
 			if (NativeProcess.isSupported) {
-				try {
+				try {					
 					var launchInfo:NativeProcessStartupInfo = new NativeProcessStartupInfo();
 					var exeDirectory:File = File.applicationDirectory;
 					var exeFile:File = File.applicationDirectory;
@@ -222,6 +299,7 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 			} else {
 				trace ("TorControl.launchTorProcess > NativeProcess is not supported. Tor must be started manually.");
 				trace ("TorControl.launchTorProcess > You may also need to enable the \"Extended Desktop\" profile for your AIR application.");
+				this.onTorControlReady();
 			}//else
 		}//launchTorProcess
 		
@@ -237,7 +315,10 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 				if (torProcess == null) {
 					return;
 				}//if
+				torProcess.removeEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, this.onStandardOutData);				
 				this.sendRawControlMessage(TorControlModel.getControlMessage("shutdown")); 
+				torProcess.exit(true); //Force close the process
+				torProcess = null;
 			} catch (err:*) {				
 			}//catch
 		}//stopTorProcess
@@ -306,10 +387,10 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 			var configString:String = new String(configData.children()[0].toString());
 			configString = this.replaceMeta(configString, "%control_ip%", String(_controlIP));
 			configString = this.replaceMeta(configString, "%control_port%", String(_controlPort));
-			configString = this.replaceMeta(configString, "%control_passhash%", String(_controlPassHash));
+			configString = this.replaceMeta(configString, "%control_passhash%", String(_controlPasswordHash));
 			configString = this.replaceMeta(configString, "%socks_ip%", String(_SOCKSIP));
 			configString = this.replaceMeta(configString, "%socks_port%", String(_SOCKSPort));
-			stream.writeMultiByte(configString, TorControlModel.charSetEncoding);
+			stream.writeMultiByte(configString, TorControlModel.charSetEncoding);			
 			stream.close();
 		}//generateConfigFile
 		
@@ -321,7 +402,7 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		private function onStandardOutData(eventObj:ProgressEvent):void {
 			var stdoutMsg:String = torProcess.standardOutput.readMultiByte(torProcess.standardOutput.bytesAvailable, TorControlModel.charSetEncoding);
 			var event:TorControlEvent = new TorControlEvent(TorControlEvent.ONLOGMSG);
-			event.body = stdoutMsg;
+			event.body = stdoutMsg;			
 			event.rawMessage = stdoutMsg;
 			this.dispatchEvent(event);
 		}//onStandardOutData
@@ -371,8 +452,21 @@ SOCKSListenAddress %socks_ip%:%socks_port%
 		 */
 		private function authenticate():void {
 			_authenticated = false;
-			this.sendRawControlMessage(TorControlModel.getControlMessage("authenticate"));
-		}//authenticate		
+			if (this.usePasswordAuthentication) {
+				var passwordAuthMsg:String = TorControlModel.getControlMessage("authenticate_password");
+				passwordAuthMsg = passwordAuthMsg.split("%password%").join(_controlPassword);				
+				this.sendRawControlMessage(passwordAuthMsg);				
+			} else {
+				this.sendRawControlMessage(TorControlModel.getControlMessage("authenticate"));
+			}//else
+		}//authenticate	
+		
+		private function get usePasswordAuthentication():Boolean {
+			if ((_controlPassword != null) && (_controlPasswordHash != null) && (_controlPassword!="") && (_controlPasswordHash!="")) {
+				return (true);
+			}//if
+			return (false);
+		}//usePasswordAuthentication
 		
 		/**
 		 * Sends a raw control message to the connected and authenticated control socket. The message must be a
