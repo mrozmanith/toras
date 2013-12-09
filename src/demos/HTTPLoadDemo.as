@@ -41,6 +41,7 @@ package demos {
 		private var tunnel:SOCKS5Tunnel = null;		
 		
 		public function HTTPLoadDemo() {
+			trace ("Running HTTPLoadDemo...");
 			this.sendHTTPRequest();	
 		}					
 						
