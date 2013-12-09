@@ -51,8 +51,9 @@ package org.torproject.model {
 		private var _isValid:Boolean = false;
 		
 		public function TorControlCircuit(circuitData:String) {
-			if ((rawCircuitData != null ) && (rawCircuitData != "")) {
+			if ((circuitData != null ) && (circuitData != "")) {
 				this._rawCircuitData = circuitData;
+				this.parseCircuitData();
 			}//if
 		}//TorControlCircuit
 		
@@ -70,13 +71,61 @@ package org.torproject.model {
 			return (this._rawCircuitData);
 		}//get rawCircuitData
 		
+		public function get remoteReason():String {
+			return (this._circuitRemoteReason);
+		}//get remoteReason
+		
+		public function get HSAddress():String {
+			return (this._circuitHSAddress);
+		}//get HSAddress
+		
+		public function get HSState():String {
+			return (this._circuitHSState);
+		}//get HSState
+		
+		public function get reason():String {
+			return (this._circuitReason);
+		}//get reason
+		
+		public function get purpose():String {
+			return (this._circuitPurpose);
+		}//get purpose
+		
+		public function get timeCreated():String {
+			return (this._circuitTimeCreated);
+		}//get timeCreated
+		
+		public function get flags():Vector.<String> {
+			return (this._circuitFlags);
+		}//get flags
+		
+		public function get hops():Vector.<TorControlCircuitHop> {
+			return (this._circuitHops);
+		}//get hops
+		
+		public function get path():String {
+			return (this._circuitPath);
+		}//get path
+		
+		public function get status():String {
+			return (this._circuitStatus);
+		}//get status
+		
+		public function get ID():int {
+			return (this._circuitID);
+		}//get ID
+		
 		private function parseCircuitData():void {
 			try {
 				var dataSplit:Array = this._rawCircuitData.split(circuitDataDelimiter);
 				this._circuitID = new int(dataSplit[0] as String);
 				this._circuitStatus = new String(dataSplit[1] as String);
-				this._circuitPath = new String(dataSplit[2] as String);
-				for (var count:uint = 3; count < dataSplit.length; count++) {
+				var startCount:uint = 3;
+				if (this._circuitStatus!="LAUNCHED") {
+					this._circuitPath = new String(dataSplit[2] as String);
+					startCount = 2;
+				}//if
+				for (var count:uint = startCount; count < dataSplit.length; count++) {
 					var circuitTail:String = dataSplit[count] as String;
 					var tailElementName:String = new String(circuitTail.split(circuitTailDataDelimiter)[0] as String);
 					var tailElementValue:String = new String(circuitTail.split(circuitTailDataDelimiter)[1] as String);
@@ -104,6 +153,7 @@ package org.torproject.model {
 							break;
 						default: break;
 					}//switch
+					this.parseCircuitHops();					
 				}//for
 			} catch (err:*) {
 				this._isValid = false;

@@ -192,6 +192,7 @@ HashedControlPassword %control_passhash%
 		 * @param	... args Used internally to apply a startup delay. Set to true to bypass any startup delay (connect immediately).		 
 		 */
 		private function onTorControlReady(... args):void {
+			trace ("onTorControlReady...");
 			if (_socket == null) {
 				if ((this._connectDelay > 0) && (args[0]!=true)){
 					setTimeout(this.connect, this._connectDelay, true);					
@@ -294,6 +295,7 @@ HashedControlPassword %control_passhash%
 					torProcess.addEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, this.onStandardOutData);
 					torProcess.start(launchInfo);
 					NativeApplication.nativeApplication.addEventListener(Event.EXITING, this.stopTorProcess);
+					this.onTorControlReady();
 				} catch (err:*) {					
 				}//catch
 			} else {
@@ -424,7 +426,8 @@ HashedControlPassword %control_passhash%
 		 * 
 		 * @param	eventObj An IOErrorEvent object.
 		 */
-		private function onConnectError(eventObj:IOErrorEvent):void {			
+		private function onConnectError(eventObj:IOErrorEvent):void {	
+			trace ("Failed to connect: "+eventObj.toString());
 			_connected = false;
 			var errorEventObj:TorControlEvent = new TorControlEvent(TorControlEvent.ONCONNECTERROR);
 			errorEventObj.error = new TorASError(eventObj.toString());
@@ -573,7 +576,7 @@ HashedControlPassword %control_passhash%
 		}//removeAsyncEvent		
 		
 		private function onData(eventObj:ProgressEvent):void {
-			var receivedMsg:String = _socket.readMultiByte(_socket.bytesAvailable, TorControlModel.charSetEncoding);
+			var receivedMsg:String = _socket.readMultiByte(_socket.bytesAvailable, TorControlModel.charSetEncoding);			
 			receivedMsg = receivedMsg.split(String.fromCharCode(10)).join("");
 			var msgSplit:Array = receivedMsg.split(String.fromCharCode(13));
 			for (var count:uint = 0; count < msgSplit.length; count++) {

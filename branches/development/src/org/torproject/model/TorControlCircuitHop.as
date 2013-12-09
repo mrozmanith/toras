@@ -30,6 +30,7 @@ package org.torproject.model  {
 	public class TorControlCircuitHop {
 		
 		public static const hopDataDelimiter:String = "=";
+		public static const hopDataDelimiterAlt:String = "~";
 		
 		private var _rawHopData:String = null;
 		private var _isValid:Boolean = false;
@@ -73,7 +74,11 @@ package org.torproject.model  {
 		
 		private function parseHopData():void {
 			try {				
-				var hopSplit:Array = this._rawHopData.split(hopDataDelimiter);
+				if (this._rawHopData.indexOf(hopDataDelimiter)>-1) {
+					var hopSplit:Array = this._rawHopData.split(hopDataDelimiter);
+				} else {
+					hopSplit = this._rawHopData.split(hopDataDelimiterAlt);
+				}//else
 				this._hopAddress = new String(hopSplit[0] as String);
 				this._hopName = new String(hopSplit[1] as String);
 				this._isValid = true;

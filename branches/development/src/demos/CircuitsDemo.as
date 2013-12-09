@@ -1,5 +1,7 @@
 package demos {
 				
+	import org.torproject.model.TorControlCircuit;
+	import org.torproject.model.TorControlCircuitHop;
 	import org.torproject.TorControl;
 	import org.torproject.events.TorControlEvent;	
 	
@@ -32,8 +34,13 @@ package demos {
 	 */
 	public class CircuitsDemo {		
 		
-		public function CircuitsDemo() {	
-		//	torControl.addEventListener(TorControlEvent.TOR_CIRC, this.onTorCIRCMessage);	
+		private var _torControl:TorControl = null;
+		
+		public function CircuitsDemo(torControl:TorControl) {
+			trace ("Running CircuitsDemo...");
+			_torControl = torControl;
+			_torControl.addEventListener(TorControlEvent.TOR_CIRC, this.onTorCIRCMessage);
+			_torControl.establishNewCircuit();
 		}			
 				
 		
@@ -59,15 +66,29 @@ package demos {
 		}
 		
 		/* PRIVATE */
-		private function onTorCIRCMessage(eventObj:TorControlEvent):void {
-		//	trace ("Tor CIRC event: " + eventObj.body);			
-			//Created another circuit, send out next request...
-		//	var proxyRequest:URLRequest = new URLRequest("http://patrickbay.ca/TorAS/echoservice/");
-		//	var variables:URLVariables = new URLVariables();			
-		//	variables.query = "Another request on another circuit";						
-		//	proxyRequest.method = URLRequestMethod.GET;
-		//	proxyRequest.data = variables;						
-		//	this.tunnel.loadHTTP(proxyRequest);		
+		private function onTorCIRCMessage(eventObj:TorControlEvent):void {			
+			var circuitObj:TorControlCircuit = new TorControlCircuit(eventObj.body);
+			trace ("---");
+			trace ("Tor CIRC Event");
+			trace (" ");
+			trace ("Circuit ID: " + circuitObj.ID);
+			trace ("Circuit status: " + circuitObj.status);
+			trace ("Circuit purpose: " + circuitObj.purpose);
+			trace ("Circuit time created: " + circuitObj.timeCreated);
+			trace ("Circuit flags: " + circuitObj.flags);
+			trace ("Circuit hops: ");
+			if (circuitObj.hops!=null) {
+				for (var count:uint = 0; count < circuitObj.hops.length; count++) {
+					var currentHop:TorControlCircuitHop = circuitObj.hops[count];
+					trace ("   Hop name:" + currentHop.name);
+					trace ("   Hop address:" + currentHop.address);
+				}
+			} else {
+				trace ("   none");
+			}
+			trace ("---");
+			//This should just keep looping infinitely...
+		//	_torControl.establishNewCircuit();
 		}
 		
 	}
