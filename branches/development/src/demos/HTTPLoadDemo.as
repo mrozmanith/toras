@@ -88,7 +88,7 @@ package demos {
 		private function sendHTTPRequest():void {
 			//Create an anonymous tunnel connection for streaming HTTP requests through Tor...
 			this.tunnel = new SOCKS5Tunnel();
-			//
+			//Send the request to the echo service (note that this service may become unavailable at any time!)
 			var proxyRequest:URLRequest = new URLRequest("http://patrickbay.ca/TorAS/echoservice/");
 			//Create some variables to send with the request...
 			var variables:URLVariables = new URLVariables();			

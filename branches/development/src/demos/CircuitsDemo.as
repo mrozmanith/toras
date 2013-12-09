@@ -41,29 +41,7 @@ package demos {
 			_torControl = torControl;
 			_torControl.addEventListener(TorControlEvent.TOR_CIRC, this.onTorCIRCMessage);
 			_torControl.establishNewCircuit();
-		}			
-				
-		
-		/* PRIVATE */
-		private function onTorLogMessage(eventObj:TorControlEvent):void {
-			//STDOUT log from Tor -- only available if we're launching the process using TorControl
-		//	trace (TorControl.executable + " > "+eventObj.rawMessage);
-		}
-		
-		/* PRIVATE */
-		private function onTorWARNMessage(eventObj:TorControlEvent):void {
-	//		trace ("Tor WARN event: "+eventObj.body);
-		}
-		
-		/* PRIVATE */
-		private function onTorINFOMessage(eventObj:TorControlEvent):void {
-	//		trace ("Tor INFO event: "+eventObj.body);
-		}
-		
-		/* PRIVATE */
-		private function onTorNOTICEMessage(eventObj:TorControlEvent):void {
-	//		trace ("Tor NOTICE event: "+eventObj.body);
-		}
+		}					
 		
 		/* PRIVATE */
 		private function onTorCIRCMessage(eventObj:TorControlEvent):void {			
@@ -86,9 +64,7 @@ package demos {
 			} else {
 				trace ("   none");
 			}
-			trace ("---");
-			//This should just keep looping infinitely...
-		//	_torControl.establishNewCircuit();
+			trace ("---");			
 		}
 		
 	}
