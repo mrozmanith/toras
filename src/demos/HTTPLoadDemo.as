@@ -97,6 +97,8 @@ package demos {
 			variables.dateTime = new Date().toString();
 			//Set submission method to POST...
 			proxyRequest.method = URLRequestMethod.POST;
+			//GET method is also valid...
+			//proxyRequest.method = URLRequestMethod.GET;
 			proxyRequest.data = variables;			
 			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPRESPONSE, this.onHTTPResponse);			
 			this.tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPREDIRECT, this.onHTTPRedirect);

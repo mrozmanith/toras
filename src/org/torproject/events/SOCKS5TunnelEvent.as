@@ -52,13 +52,16 @@ package org.torproject.events {
 		 */
 		public static const ONDISCONNECT:String = "Event.SOCKS5TunnelEvent.ONDISCONNECT";
 		/**
-		 * Dispatched when the SOCKS5Tunnel instance received a complete response to a tunneled HTTP request.
+		 * Dispatched when the SOCKS5Tunnel instance received a complete response to a tunneled HTTP request. Both non-secure
+		 * and secure (TLS / SSL) requests and responses are handled with the same event. Since the data will be transparently
+		 * encrypted and descrypted, use the "secure" property of the event to determine if the data is secured or not.
 		 * In a typical response, status would be parsed first, followed by headers, and finally by this event.
 		 */
 		public static const ONHTTPRESPONSE:String = "Event.SOCKS5TunnelEvent.ONHTTPRESPONSE";
 		/**
 		 * Dispatched when the SOCKS5Tunnel instance receives a 301 or 302 (redirect) HTTP response and the URLRequest
-		 * used to initiate the request includes the followRedirects property as true.
+		 * used to initiate the request includes the followRedirects property as true. If enabled, the redirected request is
+		 * sent immediately following this event and includes any cookies specified in the redirect response (unless this is disabled).
 		 */
 		public static const ONHTTPREDIRECT:String = "Event.SOCKS5TunnelEvent.ONHTTPREDIRECT";
 		/**
@@ -76,8 +79,18 @@ package org.torproject.events {
 		 */
 		public static const ONHTTPSTATUS:String = "Event.SOCKS5TunnelEvent.ONHTTPSTATUS";
 		
+		/**
+		 * The current, or completed, HTTP/S response received from the server.
+		 */
 		public var httpResponse:HTTPResponse = null;
-		public var error:TorASError = null;
+		/**
+		 * True if the request/response was secure (TLS / SSL).
+		 */
+		public var secure:Boolean = false;
+		/**
+		 * Any error encountered with the request / response.
+		 */
+		public var error:TorASError = null;		
 		
 		public function SOCKS5TunnelEvent(p_type:String, p_bubbles:Boolean=false, p_cancelable:Boolean=false) {
 			super(p_type, p_bubbles, p_cancelable);

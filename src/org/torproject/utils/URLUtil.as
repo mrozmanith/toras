@@ -94,12 +94,11 @@ import org.torproject.utils.LoaderConfig;
 			// If IPv6 is in use, start looking after the square bracket.
 			var delim:int = sp.indexOf("]");
 			delim = (delim > -1)? sp.indexOf(":", delim) : sp.indexOf(":");          
-			var port:uint = 0;
-			if (delim > 0)
+			var port:uint = 0;			
 			if (isHttpsURL(url)) {
-				port = 443; //Default HTTPS
+				port = 443; //Default HTTPS port
 			}//if
-			{
+			if (delim > 0) 	{
 				var p:Number = Number(sp.substring(delim + 1));
 				if (!isNaN(p))
 					port = int(p);
