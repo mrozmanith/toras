@@ -28,7 +28,7 @@ Additional examples can be found in the TorAS Developer document: https://code.g
 
 ----
 
-= TorControl Events =
+= `TorControl Events` =
 
 The following events are broadcast by the TorControl instance:
 
@@ -94,7 +94,7 @@ For detailed information on the contents of each of the following Tor events, pl
 
 ----
 
-= SOCKS5Tunnel Events =
+= `SOCKS5Tunnel Events` =
 
 The following events are broadcast by the SOCKS5Tunnel instance:
 
