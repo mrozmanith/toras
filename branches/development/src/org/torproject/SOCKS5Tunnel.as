@@ -60,6 +60,7 @@ package org.torproject {
 		public static const defaultSOCKSPort:int = 1080; //Standard SOCKS5 port
 		public static const maxRedirects:int = 5;
 		private var _tunnelSocket:Socket = null;
+		private var _secureTunnelSocket:TLSSocket = null;
 		private var _tunnelIP:String = null;
 		private var _tunnelPort:int = -1;
 		private var _connectionType:int = -1;
@@ -159,7 +160,7 @@ package org.torproject {
 				return (false);
 			}//catch
 			return (false);
-		}//loadHTTP		
+		}//loadHTTP				
 		
 		/**
 		 * The currently active HTTP/HTTPS request being handled by the tunnel instance.
@@ -171,9 +172,8 @@ package org.torproject {
 		/**
 		 * Attempts to establish a new Tor circuit through a running TorControl instance. 
 		 * Future SOCKS5Tunnel instances will communicate through the new circuit while 
-		 * existing and connected instances will continue to communicate through their existing circuits.
-		 * A TorControl instance must be instantiated and fully initialized before attempting
-		 * to invoke this command.
+		 * existing and connected instances will continue to communicate through their existing circuits until closed.
+		 * A TorControl instance must be instantiated and fully initialized before attempting to invoke this command.
 		 * 
 		 * @return True if TorControl is active and could be invoked to establish a new circuit, false
 		 * if the invocation failed for any reason.
@@ -196,13 +196,15 @@ package org.torproject {
 			return (false);
 		}//establishNewCircuit
 		
-		private function disconnectSocket():void {						
+		private function disconnectSocket():void {				
 			this._connected = false;
 			this._authenticated = false;
 			this._tunneled = false;			
 			if (this._tunnelSocket != null) {
 				this.removeSocketListeners();
-				this._tunnelSocket.close();				
+				if (this._tunnelSocket.connected) {
+					this._tunnelSocket.close();
+				}//if
 				this._tunnelSocket = null;
 				var eventObj:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONDISCONNECT);
 				this.dispatchEvent(eventObj);
@@ -235,7 +237,7 @@ package org.torproject {
 			var connectEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONCONNECT);
 			this.dispatchEvent(connectEvent);
 			this.authenticateTunnel();
-		}//onTunnelData	
+		}//onTunnelConnect	
 		
 		private function onTunnelConnectError(eventObj:IOErrorEvent):void {			
 			this.removeSocketListeners();
@@ -258,7 +260,7 @@ package org.torproject {
 			this._tunnelSocket = null;			
 			var disconnectEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONDISCONNECT);
 			this.dispatchEvent(disconnectEvent);			
-		}//onTunnelData			
+		}//onTunnelDisconnect			
 		
 		private function authenticateTunnel():void {			
 			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_head_VERSION);
@@ -267,14 +269,14 @@ package org.torproject {
 			this._tunnelSocket.flush();
 		}//authenticateTunnel
 		
-		private function onAuthenticateTunnel():void {			
+		private function onAuthenticateTunnel():void {				
 			var currentRequest:* = this._requestBuffer[0];
 			if (currentRequest is URLRequest) {
 				this.establishHTTPTunnel();
 			}//if
 		}//onAuthenticateTunnel
 		
-		private function establishHTTPTunnel():void {
+		private function establishHTTPTunnel():void {			
 			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_head_VERSION);
 			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_conn_TCPIPSTREAM);
 			this._tunnelSocket.writeByte(0); //Reserved
@@ -296,7 +298,7 @@ package org.torproject {
 			this._tunnelSocket.flush();			
 		}//establishHTTPTunnel
 		
-		private function onEstablishTunnel():void {
+		private function onEstablishTunnel():void {			
 			var currentRequest:* = this._requestBuffer[0];
 			if (currentRequest is URLRequest) {
 				this.sendQueuedHTTPRequest();
@@ -305,31 +307,46 @@ package org.torproject {
 		
 		private function sendQueuedHTTPRequest():void {
 			var currentRequest:URLRequest = this._requestBuffer.shift() as URLRequest;
-			this._currentRequest = currentRequest;
-			if (this._HTTPResponse!=null ) {
-				if (this._currentRequest.manageCookies) {
-					var requestString:String = SOCKS5Model.createHTTPRequestString(currentRequest, this._HTTPResponse.cookies);		
-				} else {
-					requestString = SOCKS5Model.createHTTPRequestString(currentRequest, null);
-				}//else
-			} else {
-				requestString = SOCKS5Model.createHTTPRequestString(currentRequest, null);
-			}//else
-			this._HTTPResponse = new HTTPResponse();
+			this._currentRequest = currentRequest;					
 			if (URLUtil.isHttpsURL(this._currentRequest.url)) {
 				this.startTLSTunnel();
 			} else {
+				if (this._HTTPResponse!=null ) {
+					if (this._currentRequest.manageCookies) {
+						var requestString:String = SOCKS5Model.createHTTPRequestString(currentRequest, this._HTTPResponse.cookies);		
+					} else {
+						requestString = SOCKS5Model.createHTTPRequestString(currentRequest, null);
+					}//else
+				} else {
+					requestString = SOCKS5Model.createHTTPRequestString(currentRequest, null);
+				}//else
+				this._HTTPResponse = new HTTPResponse();
 				this._tunnelSocket.writeMultiByte(requestString, SOCKS5Model.charSetEncoding);			
 				this._tunnelSocket.flush();
 			}//else
 		}//sendQueuedHTTPRequest
 		
 		/**
-		 * Starts the TLS tunnel for HTTPS requests/responses.
+		 * Starts TLS for HTTPS requests/responses.
 		 */
-		private function startTLSTunnel():void {
-			
-		}//startTLSTunnel
+		private function startTLSTunnel():void {			
+			if (this._HTTPResponse!=null ) {
+				if (this._currentRequest.manageCookies) {
+					var requestString:String = SOCKS5Model.createHTTPRequestString(this._currentRequest, this._HTTPResponse.cookies);		
+				} else {
+					requestString = SOCKS5Model.createHTTPRequestString(this._currentRequest, null);
+				}//else
+			} else {
+				requestString = SOCKS5Model.createHTTPRequestString(this._currentRequest, null);
+			}//else
+			this._HTTPResponse = new HTTPResponse();		
+			var domain:String = URLUtil.getServerName(this._currentRequest.url);
+			this._secureTunnelSocket = new TLSSocket();
+			this._tunnelSocket.removeEventListener(ProgressEvent.SOCKET_DATA, this.onTunnelData);	
+			this._secureTunnelSocket.addEventListener(ProgressEvent.SOCKET_DATA, this.onTunnelData);
+			this._secureTunnelSocket.startTLS(this._tunnelSocket, domain);
+			this._secureTunnelSocket.writeMultiByte(requestString, SOCKS5Model.charSetEncoding); //This is queued to send on connect
+		}//startTLSTunnel		
 		
 		private function authResponseOkay(respData:ByteArray):Boolean {
 			respData.position = 0;
@@ -361,7 +378,24 @@ package org.torproject {
 			return (false);
 		}//tunnelResponseOkay
 		
-		private function tunnelRequestComplete(respData:ByteArray):Boolean {
+		private function tunnelRequestComplete(respData:ByteArray):Boolean {			
+			var bodySize:int = -1;
+			if (this._HTTPHeadersReceived) {
+				try {
+					//If content length header supplied, use it to determine if response body is fully completed...
+					bodySize = int(this._HTTPResponse.getHeader("Content-Length").value);
+					if (bodySize>-1) {
+						var bodyReceived:int = this._HTTPResponse.body.length;					
+						if (bodySize != bodyReceived) {
+							return (false);
+						}//if
+						return (true);
+					}//if
+				} catch (err:*) {
+					bodySize = -1;
+				}//catch
+			}//if		
+			//Content-Length header not found so using raw data length instead...
 			respData.position = respData.length - 4; //Not bytesAvailable since already read at this point!
 			var respString:String = respData.readMultiByte(4, SOCKS5Model.charSetEncoding);						
 			respData.position = 0;
@@ -377,8 +411,7 @@ package org.torproject {
 					var redirectInfo:HTTPResponseHeader = responseObj.getHeader("Location");						
 					if (redirectInfo != null) {		
 						this._redirectCount++;						
-						this._currentRequest.url = redirectInfo.value;	
-						
+						this._currentRequest.url = redirectInfo.value;
 						this._HTTPStatusReceived = false;
 						this._HTTPHeadersReceived = false;											
 						this._responseBuffer = new ByteArray();
@@ -400,9 +433,9 @@ package org.torproject {
 				}//if				
 			}//if
 			return (false);
-		}//handleHTTPRedirect
+		}//handleHTTPRedirect			
 		
-		private function handleHTTPResponse(rawData:ByteArray):void {
+		private function handleHTTPResponse(rawData:ByteArray, secure:Boolean=false):void {
 			rawData.readBytes(this._responseBuffer, this._responseBuffer.length);			
 			if (!this._HTTPStatusReceived) {				
 				if (this._HTTPResponse.parseResponseStatus(this._responseBuffer)) {
@@ -423,28 +456,38 @@ package org.torproject {
 			if (this.handleHTTPRedirect(this._HTTPResponse)) {								
 				return;
 			}//if
-			if (!this.tunnelRequestComplete(rawData)) {	
-				return;
-			}//if				
+			this._responseBuffer.position = 0;				
 			this._HTTPResponse.parseResponseBody(this._responseBuffer);
 			this._responseBuffer.position = 0;			
+			if (!this.tunnelRequestComplete(rawData)) {				
+				//Response not yet fully received...keep waiting.
+				return;
+			}//if			
+			//Response fully received.
 			var dataEvent:SOCKS5TunnelEvent = new SOCKS5TunnelEvent(SOCKS5TunnelEvent.ONHTTPRESPONSE);			
+			dataEvent.secure = secure;			
 			dataEvent.httpResponse = this._HTTPResponse;	
 			dataEvent.httpResponse.rawResponse = new ByteArray();
 			dataEvent.httpResponse.rawResponse.writeBytes(this._responseBuffer);	
-			this.disconnectSocket();
+			if (!secure) {
+				this.disconnectSocket();
+			}//if
 			this.dispatchEvent(dataEvent);	
 			this._responseBuffer = new ByteArray();		
 			this._HTTPStatusReceived = false;
 			this._HTTPHeadersReceived = false;			
-		}//handleHTTPResponse
+		}//handleHTTPResponse		
 		
 		private function onTunnelData(eventObj:ProgressEvent):void {
 			var rawData:ByteArray = new ByteArray();
 			var stringData:String = new String();
-			this._tunnelSocket.readBytes(rawData);	
+			if (eventObj.target==this._tunnelSocket) {
+				this._tunnelSocket.readBytes(rawData);	
+			} else {
+				this._secureTunnelSocket.readBytes(rawData);
+			}
 			rawData.position = 0;
-			stringData = rawData.readMultiByte(rawData.length, SOCKS5Model.charSetEncoding);
+			stringData = rawData.readMultiByte(rawData.length, SOCKS5Model.charSetEncoding);		
 			rawData.position = 0;			
 			if (!this._authenticated) {
 				if (this.authResponseOkay(rawData)) {
@@ -461,7 +504,12 @@ package org.torproject {
 				}//if
 			}//if
 			if (this._currentRequest is URLRequest) {
-				this.handleHTTPResponse(rawData);			
+				if (eventObj.target is Socket) {					
+					this.handleHTTPResponse(rawData, false);
+				}//if
+				if (eventObj.target is TLSSocket) {					
+					this.handleHTTPResponse(rawData, true);
+				}//if
 			}//if
 		}//onTunnelData
 		

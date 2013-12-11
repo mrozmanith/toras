@@ -6,6 +6,7 @@ package  {
 	import org.torproject.events.TorControlEvent;	
 	import org.torproject.TorControl;	
 	import demos.HTTPLoadDemo;
+	import demos.HTTPSLoadDemo;
 	import demos.CircuitsDemo;
 	import com.hurlant.crypto.hash.*;
 	import com.hurlant.util.*;
@@ -64,8 +65,10 @@ package  {
 		private function onTorControlReady(eventObj:TorControlEvent):void {
 			trace ("Main.as > TorControl is connected, authenticated, and ready for commands.");			
 			//Uncomment the demo(s) that you would like to try...
-			var demo1:HTTPLoadDemo = new HTTPLoadDemo();
-			//var demo2:CircuitsDemo = new CircuitsDemo(torControl);
+			//var demo1:HTTPLoadDemo = new HTTPLoadDemo();
+			var demo2:HTTPSLoadDemo = new HTTPSLoadDemo();
+			//var demo3:CircuitsDemo = new CircuitsDemo(torControl);
+			
 		}	
 		
 	}

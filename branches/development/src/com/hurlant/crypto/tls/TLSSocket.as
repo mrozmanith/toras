@@ -82,7 +82,7 @@ package com.hurlant.crypto.tls {
 		}
 		
 		
-		private function onTLSData(event:TLSEvent):void {
+		private function onTLSData(event:TLSEvent):void {			
 			if (_iStream.position == _iStream.length) {
 				_iStream.position = 0;
 				_iStream.length = 0;
@@ -96,7 +96,7 @@ package com.hurlant.crypto.tls {
 			dispatchEvent(new ProgressEvent(ProgressEvent.SOCKET_DATA, false, false, event.data.length));
 		}
 		
-		private function onTLSReady(event:TLSEvent):void {
+		private function onTLSReady(event:TLSEvent):void {			
 			_ready = true;
 			scheduleWrite();
 		}
