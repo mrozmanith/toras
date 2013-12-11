@@ -69,7 +69,8 @@ For detailed information on the contents of each of the following Tor events, pl
 
 
 *`TorControlEvent.TOR_CIRC`* - Dispatched when the Tor process dispatches an internal "CIRC" event. The details of the event are included in the event object's _body_ property, and the raw (un-parsed) data received in the event is in the _rawMessage_ property. The Tor event name that was captured is included in the _torEvent_ property.
-* More information on working with this event and with Tor circuits in general can be found in the following Wiki entry: https://code.google.com/p/toras/wiki/TorASCircuits
+
+||||More information on working with this event and with Tor circuits in general can be found in the following Wiki entry: https://code.google.com/p/toras/wiki/TorASCircuits||||
 
 
 *`TorControlEvent.TOR_STREAM`* - Dispatched when the Tor process dispatches an internal "STREAM" event. The details of the event are included in the event object's _body_ property, and the raw (un-parsed) data received in the event is in the _rawMessage_ property. The Tor event name that was captured is included in the _torEvent_ property.
