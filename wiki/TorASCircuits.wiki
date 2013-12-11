@@ -14,3 +14,44 @@ This document describes how TorAS can be used to both analyze existing Tor circu
 Once the Tor control connection has been successfully established (see: https://code.google.com/p/toras/wiki/TorASDeveloperGuide), it is a simple matter to add an event listener for the TorControlEvent.TOR_CIRC event (see: https://code.google.com/p/toras/wiki/TorASEvents).
 
 The running Tor process dispatched CIRC events whenever a change occurs in an existing circuit. Examples of this can include when a circuit build is first launched, when a new hop has been added to a circuit, when a circuit is fully built, or when a circuit becomes unavailable.
+
+To observe the local state of Tor's circuits, you only need to add an event listener to an active, connected, and authenticated TorControl instance. For example:
+
+{{{
+               import org.torproject.TorControl;
+               import org.torproject.model.TorControlCircuit;
+ 	       import org.torproject.model.TorControlCircuitHop;	
+  	       import org.torproject.events.TorControlEvent;
+
+               public var torControl:TorControl=null;
+              
+
+               public function CircuitsDemo(torControl:TorControl) {
+			torControl = new TorControl(null, -1, null, -1, "TorControlConnectionPassword");
+	                torControl.addEventListener(TorControlEvent.TOR_CIRC, this.onTorCIRCMessage);
+	                torControl.connect();
+		}					
+		
+		private function onTorCIRCMessage(eventObj:TorControlEvent):void {			
+			var circuitObj:TorControlCircuit = new TorControlCircuit(eventObj.body);
+			trace ("---");
+			trace ("Tor CIRC Event");
+			trace (" ");
+			trace ("Circuit ID: " + circuitObj.ID);
+			trace ("Circuit status: " + circuitObj.status);
+			trace ("Circuit purpose: " + circuitObj.purpose);
+			trace ("Circuit time created: " + circuitObj.timeCreated);
+			trace ("Circuit flags: " + circuitObj.flags);
+			trace ("Circuit hops: ");
+			if (circuitObj.hops!=null) {
+				for (var count:uint = 0; count < circuitObj.hops.length; count++) {
+					var currentHop:TorControlCircuitHop = circuitObj.hops[count];
+					trace ("   Hop name:" + currentHop.name);
+					trace ("   Hop address:" + currentHop.address);
+				}
+			} else {
+				trace ("   none");
+			}
+			trace ("---");			
+		}
+}}}
