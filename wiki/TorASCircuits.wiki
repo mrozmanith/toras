@@ -84,13 +84,13 @@ Although it's not absolutely necessary, the *TorControlCircuit* class makes it e
 
 * *`status`*: The status message associated with the circuit event. In the above example, the event signified that the circuit has just been EXTENDED with a new hop (usually the last one in the list). This is an ActionScript _String_ type.
 
-* *`purpose`*: The purpose, or usage, of the circuit. The above example shows a GENERAL purpose circuit that can be used for bidirectional communication. This is an ActionScript _String_ type.
+* purpose*: The purpose, or usage, of the circuit. The above example shows a GENERAL purpose circuit that can be used for bidirectional communication. This is an ActionScript _String_ type.
 
-* *`time`*: The time stamp associated with the Tor circuit event. This is an ActionScript _String_ type.
+* time*: The time stamp associated with the Tor circuit event. This is an ActionScript _String_ type.
 
-* *`flags`*: A list of flags associated with the Tor circuit. This is an ActionScript vector array of _String_ types.
+* flags*: A list of flags associated with the Tor circuit. This is an ActionScript vector array of _String_ types.
 
-* *`hops`*: A list of hops, in the order in which they are used, for the associated Tor circuit.  This is an ActionScript vector array of _`TorControlCircuitHop`_ types. Each _`TorControlCircuitHop`_ instance contains the public _name_ of the hop and it's encrypted/hashed _address_.
+* hops*: A list of hops, in the order in which they are used, for the associated Tor circuit.  This is an ActionScript vector array of _`TorControlCircuitHop`_ types. Each _`TorControlCircuitHop`_ instance contains the public _name_ of the hop and it's encrypted/hashed _address_.
 
 == Establishing New Circuits ==
 
