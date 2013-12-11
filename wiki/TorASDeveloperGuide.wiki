@@ -135,7 +135,7 @@ As mentioned in the previous section, it is not necessary to use TorControl to s
 
 The SOCKS5Tunnel class crates the SOCKS5 tunnel which the Tor communication channel (circuit) uses to proxy requests. Each request is encrypted and sent through the Tor network until reaching an "exit node" which performs the actual request and response. For all requests, TorAS uses Tor's internal DNS resolution mechanism which adds extra security by not exposing domain lookups.
 
-== HTTP Requests ==
+== HTTP and HTTPS Requests ==
 
 The most common type of request via a SOCKS5Tunnel is the HTTP request, similar to ActionScript's URLLoader class. SOCKS5Tunnel uses the URLRequest class to determine which server to communicate with, what data to include with the request, and other configuration options used to manipulate the request data. 
 
@@ -154,13 +154,13 @@ request.data=variables;
 
 Not all properties or a URLRequest instance are supported by TorAS (yet!) These include:
 
-*authenticate, cacheResponse, contentType, digest, idleTimeout, method, useCache*
+*authenticate, cacheResponse, contentType, digest, idleTimeout, method (limited support), useCache*
 
 Additionally, the following method is not yet supported:
 
 *useRedirectURL*
 
-HTTPS requests are not supported at this time.
+HTTPS requests are supported as of revision 115 -- simply use "https" instead of "http" as the protocol within the specified URL (all other instructions can stay the same). Be aware, however, that HTTPS has not been fully tested so functionality should currently be considered unstable.
 
 Once the request has been properly constructed, it is used as the parameter for the loadHTTP method of the SOCKS5Tunnel instance:
 
@@ -173,7 +173,11 @@ tunnel.addEventListener(SOCKS5TunnelEvent.ONHTTPRESPONSE, onSOCKSTunnelResponse)
 tunnel.loadHTTP(request);	
 
 function onSOCKSTunnelResponse(eventObj:SOCKS5TunnelEvent):void {
-   trace ("Got response: ");
+   if (eventObj.secure==false) {
+      trace ("Got HTTP response: ");
+   } else {
+      trace ("Got HTTPS response: ");
+   }
    trace (eventObj.httpResponse.body);
 }
 }}}
