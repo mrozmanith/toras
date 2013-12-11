@@ -15,11 +15,11 @@ The remainder of this document describes how TorAS can be used to both analyze e
 
 == Capturing Tor Circuit Data ==
 
-Once the Tor control connection has been successfully established (see: https://code.google.com/p/toras/wiki/TorASDeveloperGuide), it is a simple matter to add an event listener for the TorControlEvent.TOR_CIRC event (see: https://code.google.com/p/toras/wiki/TorASEvents).
+Once the Tor control connection has been successfully established (see: https://code.google.com/p/toras/wiki/TorASDeveloperGuide), it is a simple matter to add an event listener for the *TorControlEvent.TOR_CIRC * event (see: https://code.google.com/p/toras/wiki/TorASEvents).
 
 The running Tor process dispatched CIRC events whenever a change occurs in an existing circuit. Examples of this can include when a circuit build is first launched, when a new hop has been added to a circuit, when a circuit is fully built, or when a circuit becomes unavailable.
 
-To observe the local state of Tor's circuits, you only need to add an event listener to an active, connected, and authenticated TorControl instance. For example:
+To observe the local state of Tor's circuits, you only need to add an event listener to an active, connected, and authenticated *TorControl* instance. For example:
 
 {{{
    import org.torproject.TorControl;
@@ -59,7 +59,7 @@ To observe the local state of Tor's circuits, you only need to add an event list
    }
 }}}
 
-Note that unlike other examples, we don' have to wait for the *TorControlEvent.ONAUTHENTICATE* event to begin receiving TOR_CIRC events.
+Note that unlike other examples, we don' have to wait for the *TorControlEvent.ONAUTHENTICATE* event to begin receiving *TOR_CIRC* events.
 
 The output from the *onTorCIRCMessage* listener in the above example would produce something like this:
 
@@ -89,7 +89,7 @@ Although it's not absolutely necessary, the *TorControlCircuit* class makes it e
 
 == Establishing New Circuits ==
 
-Tor does a good job of ensuring that requests and responses are anonymous within existing circuits. However, you may wish to force Tor to establish new circuits after a certain amount of time or after a specific number of requests / responses. The easiest way to force Tor to build new circuits from scratch is by invoking the *establishNewCircuit* method of the connected and authenticated TorControl instance:
+Tor does a good job of ensuring that requests and responses are anonymous within existing circuits. However, you may wish to force Tor to establish new circuits after a certain amount of time or after a specific number of requests / responses. The easiest way to force Tor to build new circuits from scratch is by invoking the *establishNewCircuit* method of the connected and authenticated *TorControl* instance:
 
 {{{
   import org.torproject.TorControl;
@@ -112,6 +112,6 @@ Tor does a good job of ensuring that requests and responses are anonymous within
    }	
 }}}
 
-Note that, unlike the first example above, we must first wait for the TorControl instance to fully authenticate before we can use it. This makes sense considering that Tor circuits can only exist if Tor itself is running and available.
+Note that, unlike the first example above, we must first wait for the *TorControl* instance to fully authenticate before we can use it. This makes sense considering that Tor circuits can only exist if Tor itself is running and available.
 
 It's also important to be aware that Tor has built-in limits on how many times this method can be invoked. The limit is not documented but typically it's between 3 to 5 seconds.
