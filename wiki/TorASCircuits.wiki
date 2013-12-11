@@ -78,11 +78,11 @@ Circuit hops:
    Hop address:$7C88112DC842751193272851A85F1793BF77FFA8
 }}}
 
-Although it's not absolutely necessary, the *TorControlCircuit* class makes it easy to parse Tor's information into a usable format. While not all of the information may be useful or relevant, some of it is absolutely crucial if you wish to control circuits directly.
+Although it's not absolutely necessary, the *TorControlCircuit* class makes it easy to parse Tor's information into a usable format. The parsed information includes:
 
-* *`ID`*: The numeric ID of the circuit. Any circuit-specific operations require this identifier in order to target the appropriate circuit(s). This is an ActionScript _int_ type.
+* ID*: The numeric ID of the circuit. Any circuit-specific operations require this identifier in order to target the appropriate circuit(s). This is an ActionScript _int_ type.
 
-* *`status`*: The status message associated with the circuit event. In the above example, the event signified that the circuit has just been EXTENDED with a new hop (usually the last one in the list). This is an ActionScript _String_ type.
+* status*: The status message associated with the circuit event. In the above example, the event signified that the circuit has just been EXTENDED with a new hop (usually the last one in the list). This is an ActionScript _String_ type.
 
 * purpose*: The purpose, or usage, of the circuit. The above example shows a GENERAL purpose circuit that can be used for bidirectional communication. This is an ActionScript _String_ type.
 
