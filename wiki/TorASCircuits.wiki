@@ -15,7 +15,7 @@ The remainder of this document describes how TorAS can be used to both analyze e
 
 == Capturing Tor Circuit Data ==
 
-Once the Tor control connection has been successfully established (see: https://code.google.com/p/toras/wiki/TorASDeveloperGuide), it is a simple matter to add an event listener for the *TorControlEvent.TOR_CIRC * event (see: https://code.google.com/p/toras/wiki/TorASEvents).
+Once the Tor control connection has been successfully established (see: https://code.google.com/p/toras/wiki/TorASDeveloperGuide), it is a simple matter to add an event listener for the *`TorControlEvent.TOR_CIRC`* event (see: https://code.google.com/p/toras/wiki/TorASEvents).
 
 The running Tor process dispatched CIRC events whenever a change occurs in an existing circuit. Examples of this can include when a circuit build is first launched, when a new hop has been added to a circuit, when a circuit is fully built, or when a circuit becomes unavailable.
 
@@ -59,7 +59,7 @@ To observe the local state of Tor's circuits, you only need to add an event list
    }
 }}}
 
-Note that unlike other examples, we don' have to wait for the *TorControlEvent.ONAUTHENTICATE* event to begin receiving *TOR_CIRC* events.
+Note that unlike other examples, we don' have to wait for the *`TorControlEvent.ONAUTHENTICATE`* event to begin receiving *TOR_CIRC* events.
 
 The output from the *onTorCIRCMessage* listener in the above example would produce something like this:
 
