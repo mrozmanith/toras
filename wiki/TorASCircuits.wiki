@@ -117,6 +117,6 @@ Tor does a good job of ensuring that requests and responses are anonymous within
    }	
 }}}
 
-Note that, unlike the first example above, we must first wait for the *`TorControl`* instance to fully authenticate before we can use it. This makes sense considering that Tor circuits can only exist if Tor itself is running and available.
+Note that, unlike the first example above, we must first wait for the *`TorControl`* instance to fully authenticate before we can use it. This makes sense considering that Tor circuits can only be manipulated if Tor itself is running and available (i.e. if circuits are active).
 
 It's also important to be aware that Tor has built-in limits on how many times this method can be invoked. The limit is not documented but typically it's between 3 to 5 seconds.
