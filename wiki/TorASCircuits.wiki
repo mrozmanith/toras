@@ -1,14 +1,16 @@
-#summary Working with Tor circuits using TorAS
-#labels Tor,ActionScript
+#summary TorAS Circuit Information and Management
+#labels Tor,ActionScript,TorControlEvent.TOR_CIRC,circuits,hops
 
 = Introduction =
 
-Add your content here.
+The main purpose of the Tor network is to anonymize (hopefully) encrypted data so that the receiver (a web server for example), has no way of identifying who made the request. This is accomplished through the use of Tor "circuits". 
 
+A circuit is at the heart of Tor's onion routing system, and is a secure and anonymous path between two or more participating Tor nodes through which data flows. Each node or stop along a circuit is called a "hop", and is identified using both a plain-text public name and an encrypted network address.
 
-= Details =
+This document describes how TorAS can be used to both analyze existing Tor circuits as well as manage and alter them.
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+== Capturing Tor Circuit Data ==
+
+Once the Tor control connection has been successfully established (see: https://code.google.com/p/toras/wiki/TorASDeveloperGuide), it is a simple matter to add an event listener for the TorControlEvent.TOR_CIRC event (see: https://code.google.com/p/toras/wiki/TorASEvents).
+
+The running Tor process dispatched CIRC events whenever a change occurs in an existing circuit. Examples of this can include when a circuit build is first launched, when a new hop has been added to a circuit, when a circuit is fully built, or when a circuit becomes unavailable.
