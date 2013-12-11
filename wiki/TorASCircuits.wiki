@@ -88,7 +88,7 @@ Although it's not absolutely necessary, the *TorControlCircuit* class makes it e
 
 * *`time`*: The time stamp associated with the Tor circuit event. This is an ActionScript _String_ type.
 
-* *`flags1*: A list of flags associated with the Tor circuit. This is an ActionScript vector array of _String_ types.
+* *`flags`*: A list of flags associated with the Tor circuit. This is an ActionScript vector array of _String_ types.
 
 * *`hops`*: A list of hops, in the order in which they are used, for the associated Tor circuit.  This is an ActionScript vector array of _`TorControlCircuitHop`_ types. Each _`TorControlCircuitHop`_ instance contains the public _name_ of the hop and it's encrypted/hashed _address_.
 
