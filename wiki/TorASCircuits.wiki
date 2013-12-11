@@ -5,9 +5,11 @@
 
 The main purpose of the Tor network is to anonymize (hopefully) encrypted data so that the receiver (a web server for example), has no way of identifying who made the request. This is accomplished through the use of Tor "circuits". 
 
-A circuit is at the heart of Tor's onion routing system, and is a secure and anonymous path between two or more participating Tor nodes through which data flows. Each node or stop along a circuit is called a "hop", and is identified using both a plain-text public name and an encrypted network address.
+A circuit is at the heart of Tor's onion routing system. It is essentially a secure and anonymous path between two or more participating Tor nodes through which data flows. Each node or stop along a circuit is called a "hop", and is identified using both a plain-text public name and an encrypted network address.
 
-This document describes how TorAS can be used to both analyze existing Tor circuits as well as manage and alter them.
+This is not unlike typical internet connectivity where a request between a client and server may go through any number of hops.
+
+The remainder of this document describes how TorAS can be used to both analyze existing Tor circuits as well as manage and alter them.
 
 == Capturing Tor Circuit Data ==
 
