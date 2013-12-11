@@ -7,7 +7,7 @@ The TorAS source code attempts to be autonomous and unobtrusive, reducing the de
 
 For this reason, TorAS comes with a number of default settings and pre-configurations intended to start the services automatically. While this will probably be sufficient for most developers, at least initially, it's wortwhile to become familiar with the rudimentary operation of TorAS.
 
-It is assumed that developers using TorAS have some knowledge with ActionScript (creating class instances, calling methods, working with data, etc.)
+It is assumed that developers using TorAS have some knowledge of ActionScript (creating class instances, calling methods, working with data, etc.)
 
 Additionally, while TorAS provides a simplified way to access the Tor services, developers can gain additional low-level control by issuing direct commands to the Tor control and communication sockets. For more information, refer to the following documents:
 
@@ -19,7 +19,7 @@ https://code.google.com/p/toras/wiki/TorProtocolSpecification
 
 = Configuration =
 
-The TorControl class is responsible for connecting to and control a running Tor control connection, and optionally for getting the Tor services binary up and running (which starts a Tor control connection). If you plan to start the Tor binary manually, or if it's already running, you can skip this section entirely.
+The TorControl class is responsible for connecting to, and controlling a running Tor control connection, and optionally for getting the Tor services binary up and running (which starts a Tor control connection). If you plan to start the Tor binary manually, or if it's already running, you can skip this section entirely.
 
 TorControl configures the Tor services binary by dynamically creating a configuration file (torcc), writing it to the default application storage directory (File.applicationStorageDirectory), and then instructing Tor to load it as part of startup ("_tor.exe -f /AppStorageDirectory/torcc_").
 
