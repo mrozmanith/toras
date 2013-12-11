@@ -90,7 +90,7 @@ Although it's not absolutely necessary, the *TorControlCircuit* class makes it e
 
 * flags*: A list of flags associated with the Tor circuit. This is an ActionScript vector array of _String_ types.
 
-* hops*: A list of hops, in the order in which they are used, for the associated Tor circuit.  This is an ActionScript vector array of _`TorControlCircuitHop`_ types. Each _`TorControlCircuitHop`_ instance contains the public _name_ of the hop and it's encrypted/hashed _address_.
+* hops*: A list of hops, in the order in which they are used, for the associated Tor circuit.  This is an ActionScript vector array of _`TorControlCircuitHop`_ types. Each _`TorControlCircuitHop`_ instance contains the public _name_ of the hop and it's encrypted / hashed _address_. Each hop is listed in order, so that a request will pass through hop 0, then hop 1, hop 2, and so on.
 
 == Establishing New Circuits ==
 
