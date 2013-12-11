@@ -19,7 +19,7 @@ Once the Tor control connection has been successfully established (see: https://
 
 The running Tor process dispatched CIRC events whenever a change occurs in an existing circuit. Examples of this can include when a circuit build is first launched, when a new hop has been added to a circuit, when a circuit is fully built, or when a circuit becomes unavailable.
 
-To observe the local state of Tor's circuits, you only need to add an event listener to an active, connected, and authenticated *TorControl* instance. For example:
+To observe the local state of Tor's circuits, you only need to add an event listener to an active, connected, and authenticated *`TorControl`* instance. For example:
 
 {{{
    import org.torproject.TorControl;
@@ -80,16 +80,16 @@ Circuit hops:
 
 Although it's not absolutely necessary, the *TorControlCircuit* class makes it easy to parse Tor's information into a usable format. While not all of the information may be useful or relevant, some of it is absolutely crucial if you wish to control circuits directly.
 
-* *ID*: The numeric ID of the circuit. Any circuit-specific operations require this identifier in order to target the appropriate circuit(s). This is an ActionScript _int_ type.
-* *status*: The status message associated with the circuit event. In the above example, the event signified that the circuit has just been EXTENDED with a new hop (usually the last one in the list). This is an ActionScript _String_ type.
-* *purpose*: The purpose, or usage, of the circuit. The above example shows a GENERAL purpose circuit that can be used for bidirectional communication. This is an ActionScript _String_ type.
+* *`ID`*: The numeric ID of the circuit. Any circuit-specific operations require this identifier in order to target the appropriate circuit(s). This is an ActionScript _int_ type.
+* *`status`*: The status message associated with the circuit event. In the above example, the event signified that the circuit has just been EXTENDED with a new hop (usually the last one in the list). This is an ActionScript _String_ type.
+* *`purpose*: The purpose, or usage, of the circuit. The above example shows a GENERAL purpose circuit that can be used for bidirectional communication. This is an ActionScript _String_ type.
 * *time*: The time stamp associated with the Tor circuit event. This is an ActionScript _String_ type.
 * *flags*: A list of flags associated with the Tor circuit. This is an ActionScript vector array of _String_ types.
-* *hops*: A list of hops, in the order in which they are used, for the associated Tor circuit.  This is an ActionScript vector array of _TorControlCircuitHop_ types. Each _TorControlCircuitHop_ instance contains the public _name_ of the hop and it's encrypted/hashed _address_.
+* *hops*: A list of hops, in the order in which they are used, for the associated Tor circuit.  This is an ActionScript vector array of _`TorControlCircuitHop`_ types. Each _`TorControlCircuitHop`_ instance contains the public _name_ of the hop and it's encrypted/hashed _address_.
 
 == Establishing New Circuits ==
 
-Tor does a good job of ensuring that requests and responses are anonymous within existing circuits. However, you may wish to force Tor to establish new circuits after a certain amount of time or after a specific number of requests / responses. The easiest way to force Tor to build new circuits from scratch is by invoking the *establishNewCircuit* method of the connected and authenticated *TorControl* instance:
+Tor does a good job of ensuring that requests and responses are anonymous within existing circuits. However, you may wish to force Tor to establish new circuits after a certain amount of time or after a specific number of requests / responses. The easiest way to force Tor to build new circuits from scratch is by invoking the *`establishNewCircuit`* method of the connected and authenticated *`TorControl`* instance:
 
 {{{
   import org.torproject.TorControl;
@@ -112,6 +112,6 @@ Tor does a good job of ensuring that requests and responses are anonymous within
    }	
 }}}
 
-Note that, unlike the first example above, we must first wait for the *TorControl* instance to fully authenticate before we can use it. This makes sense considering that Tor circuits can only exist if Tor itself is running and available.
+Note that, unlike the first example above, we must first wait for the *`TorControl`* instance to fully authenticate before we can use it. This makes sense considering that Tor circuits can only exist if Tor itself is running and available.
 
 It's also important to be aware that Tor has built-in limits on how many times this method can be invoked. The limit is not documented but typically it's between 3 to 5 seconds.
