@@ -21,7 +21,7 @@ package org.torproject {
 	import flash.net.URLVariables;
 	import org.torproject.utils.URLUtil;	
 	
-	// TLS/SSL courtesy of as3crypto
+	//TLS/SSL support thanks to Henri Torgeman, a.k.a. Metal Hurlant  - https://code.google.com/p/as3crypto/
 	import com.hurlant.crypto.tls.*;
 	
 	/**
@@ -32,7 +32,8 @@ package org.torproject {
 	 * SOCKS5Tunnel can be used completely independently (TorControl may be entirely omitted).
 	 * 
 	 * @author Patrick Bay
-	  * The MIT License (MIT)
+	 * 
+	 * The MIT License (MIT)
 	 * 
 	 * Copyright (c) 2013 Patrick Bay
 	 * 
@@ -53,11 +54,90 @@ package org.torproject {
 	 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 	 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 	 * THE SOFTWARE. 
-	 */
+	 * 
+	 * ---
+	 * 
+	 * This library incorporate the "as3crypto" library by Henri Torgeman. Additional licences for this libary and additionally
+	 * incorporated source code are displayed below:
+	 * 
+	 * Copyright (c) 2007 Henri Torgemane
+	 * All Rights Reserved.
+	 * 
+	 * BigInteger, RSA, Random and ARC4 are derivative works of the jsbn library
+	 * (http://www-cs-students.stanford.edu/~tjw/jsbn/)
+	 * The jsbn library is Copyright (c) 2003-2005  Tom Wu (tjw@cs.Stanford.EDU)
+	 * 
+	 * MD5, SHA1, and SHA256 are derivative works (http://pajhome.org.uk/crypt/md5/)
+	 * Those are Copyright (c) 1998-2002 Paul Johnston & Contributors (paj@pajhome.org.uk)
+	 * 
+	 * SHA256 is a derivative work of jsSHA2 (http://anmar.eu.org/projects/jssha2/)
+	 * jsSHA2 is Copyright (c) 2003-2004 Angel Marin (anmar@gmx.net)
+	 * 
+	 * AESKey is a derivative work of aestable.c (http://www.geocities.com/malbrain/aestable_c.html)
+	 * aestable.c is Copyright (c) Karl Malbrain (malbrain@yahoo.com)
+	 * 
+	 * BlowFishKey, DESKey and TripeDESKey are derivative works of the Bouncy Castle Crypto Package (http://www.bouncycastle.org)
+	 * Those are Copyright (c) 2000-2004 The Legion Of The Bouncy Castle
+	 * 
+	 * Base64 is copyright (c) 2006 Steve Webster (http://dynamicflash.com/goodies/base64)
+	 * 
+	 * Redistribution and use in source and binary forms, with or without modification, 
+	 * are permitted provided that the following conditions are met:
+	 * 
+	 * Redistributions of source code must retain the above copyright notice, this list 
+	 * of conditions and the following disclaimer. Redistributions in binary form must 
+	 * reproduce the above copyright notice, this list of conditions and the following 
+	 * disclaimer in the documentation and/or other materials provided with the distribution.
+	 * 
+	 * Neither the name of the author nor the names of its contributors may be used to endorse
+	 * or promote products derived from this software without specific prior written permission.
+	 * 
+	 * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
+	 * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
+	 * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
+	 * 
+	 * IN NO EVENT SHALL TOM WU BE LIABLE FOR ANY SPECIAL, INCIDENTAL,
+	 * INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND, OR ANY DAMAGES WHATSOEVER
+	 * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER OR NOT ADVISED OF
+	 * THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF LIABILITY, ARISING OUT
+	 * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+	 * 
+	 * ---
+	 * 
+	 * Additionally, the MD5 algorithm is covered by the following notice:
+	 * Copyright (C) 1991-2, RSA Data Security, Inc. Created 1991. All rights reserved.
+	 * 
+	 * License to copy and use this software is granted provided that it
+	 * is identified as the "RSA Data Security, Inc. MD5 Message-Digest
+	 * Algorithm" in all material mentioning or referencing this software
+	 * or this function.
+	 * 
+	 * License is also granted to make and use derivative works provided
+	 * that such works are identified as "derived from the RSA Data
+	 * Security, Inc. MD5 Message-Digest Algorithm" in all material
+	 * mentioning or referencing the derived work.
+	 * 
+	 * RSA Data Security, Inc. makes no representations concerning either
+	 * the merchantability of this software or the suitability of this
+	 * software for any particular purpose. It is provided "as is"
+	 * without express or implied warranty of any kind.
+	 * 
+	 * These notices must be retained in any copies of any part of this
+	 * documentation and/or software.
+ 	 */
 	public class SOCKS5Tunnel extends EventDispatcher {
 		
+		/**
+		 * Default SOCKS5 IP address. For Tor networking, this is usually 127.0.0.1 (the current local machine).
+		 */
 		public static const defaultSOCKSIP:String = "127.0.0.1";
-		public static const defaultSOCKSPort:int = 1080; //Standard SOCKS5 port
+		/**
+		 * Default SOCKS5 port.
+		 */
+		public static const defaultSOCKSPort:int = 1080;
+		/**
+		 * Maximum number of redirects to follow, if enabled, whenever a 301 or 302 HTTP status is received.
+		 */
 		public static const maxRedirects:int = 5;
 		private var _tunnelSocket:Socket = null;
 		private var _secureTunnelSocket:TLSSocket = null;
@@ -79,8 +159,8 @@ package org.torproject {
 		/**
 		 * Creates an instance of a SOCKS5 proxy tunnel.
 		 * 
-		 * @param	tunnelIP The SOCKS proxy IP to use. If not specified, the current static constant values are used by default.
-		 * @param	tunnelPort The SOCKS proxy port to use. If not specified, the current static constant values are used by default.
+		 * @param	tunnelIP The SOCKS proxy IP to use. If not specified, the current default value is used.
+		 * @param	tunnelPort The SOCKS proxy port to use. If not specified, the current default value is used.
 		 */
 		public function SOCKS5Tunnel(tunnelIP:String=null, tunnelPort:int=-1) {
 			if ((tunnelIP == null) || (tunnelIP == "")) {
@@ -196,6 +276,9 @@ package org.torproject {
 			return (false);
 		}//establishNewCircuit
 		
+		/**
+		 * Disconnects the SOCKS5 tunnel socket if connected.
+		 */
 		private function disconnectSocket():void {				
 			this._connected = false;
 			this._authenticated = false;
@@ -211,6 +294,9 @@ package org.torproject {
 			}//if			
 		}//disconnectSocket
 		
+		/**
+		 * Removes standard listeners to the default SOCKS5 tunnel socket.
+		 */
 		private function removeSocketListeners():void {
 			if (this._tunnelSocket == null) { return;}
 			this._tunnelSocket.removeEventListener(Event.CONNECT, this.onTunnelConnect);
@@ -221,6 +307,9 @@ package org.torproject {
 			this._tunnelSocket.removeEventListener(Event.CLOSE, this.onTunnelDisconnect);
 		}//removeSocketListeners
 				
+		/**
+		 * Adds standard listeners to the default SOCKS5 tunnel socket.
+		 */
 		private function addSocketListeners():void {
 			if (this._tunnelSocket == null) { return;}
 			this._tunnelSocket.addEventListener(Event.CONNECT, this.onTunnelConnect);
@@ -230,6 +319,11 @@ package org.torproject {
 			this._tunnelSocket.addEventListener(Event.CLOSE, this.onTunnelDisconnect);
 		}//addSocketListeners
 		
+		/**
+		 * Invoked when the SOCKS5 tunnel socket connection is successfully established.
+		 * 
+		 * @param	eventObj A standard Event object.
+		 */
 		private function onTunnelConnect(eventObj:Event):void {						
 			this._connected = true;
 			this._tunnelSocket.removeEventListener(Event.CONNECT, this.onTunnelConnect);			
@@ -239,6 +333,11 @@ package org.torproject {
 			this.authenticateTunnel();
 		}//onTunnelConnect	
 		
+		/**
+		 * Invoked when the SOCKS5 tunnel receives an IOErrorEvent event.
+		 * 
+		 * @param	eventObj A standard IOErrorEvent object.
+		 */
 		private function onTunnelConnectError(eventObj:IOErrorEvent):void {			
 			this.removeSocketListeners();
 			this._tunnelSocket = null;
@@ -252,6 +351,11 @@ package org.torproject {
 			this.dispatchEvent(errorEventObj);
 		}//onTunnelConnectError
 		
+		/**
+		 * Invoked when the SOCKS5 tunnel socket has been disconnected.
+		 * 
+		 * @param	eventObj A standard Event object.
+		 */
 		private function onTunnelDisconnect(eventObj:Event):void {				
 			this.removeSocketListeners();			
 			this._connected = false;
@@ -262,6 +366,12 @@ package org.torproject {
 			this.dispatchEvent(disconnectEvent);			
 		}//onTunnelDisconnect			
 		
+		/**
+		 * Invoked to authenticate the SOCKS5 tunnel after it is connected. The tunnel will not accept any outbound 
+		 * requests until authentication has been completed.
+		 * 
+		 * Note: Currently only the 0 (none) authentication type is supported. 
+		 */
 		private function authenticateTunnel():void {			
 			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_head_VERSION);
 			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_auth_NUMMETHODS);
@@ -269,6 +379,9 @@ package org.torproject {
 			this._tunnelSocket.flush();
 		}//authenticateTunnel
 		
+		/**
+		 * Invoked when the SOCKS5 tunnel authentication has completed and the end-to-end connection is ready to be established.
+		 */
 		private function onAuthenticateTunnel():void {				
 			var currentRequest:* = this._requestBuffer[0];
 			if (currentRequest is URLRequest) {
@@ -276,6 +389,10 @@ package org.torproject {
 			}//if
 		}//onAuthenticateTunnel
 		
+		/**
+		 * Establishes a HTTP/HTTPS tunnel once the SOCKS5 socket has been connected and authenticated. If no port is specified,
+		 * HTTP connections will be attempted over port 80 while HTTPS connections will be attempted over port 443.
+		 */
 		private function establishHTTPTunnel():void {			
 			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_head_VERSION);
 			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_conn_TCPIPSTREAM);
@@ -283,28 +400,38 @@ package org.torproject {
 			this._tunnelSocket.writeByte(SOCKS5Model.SOCKS5_addr_DOMAIN); //Most secure when using DNS through proxy
 			var currentRequest:* = this._requestBuffer[0];			
 			var domain:String = URLUtil.getServerName(currentRequest.url);
-		//	var domainSplit:Array = domain.split(".");			
-		//	if (domainSplit.length>2) {
-		//		domain = domainSplit[1] + "." + domainSplit[2]; //Ensure we have JUST the domain
-		//	}//if				
+			/*
+			var domainSplit:Array = domain.split(".");			
+			if (domainSplit.length>2) {
+				domain = domainSplit[1] + "." + domainSplit[2]; //Ensure we have JUST the domain
+			}//if				
+			*/
 			var domainLength:int = int(domain.length);
 			var port:int = int(URLUtil.getPort(currentRequest.url));			
 			this._tunnelSocket.writeByte(domainLength);
 			var portMSB:int = (port & 0xFF00) >> 8;
 			var portLSB:int = port & 0xFF;			
 			this._tunnelSocket.writeMultiByte(domain, SOCKS5Model.charSetEncoding);			
-			this._tunnelSocket.writeByte(portMSB); //Obviously swap these if LSB comes first
+			this._tunnelSocket.writeByte(portMSB);
 			this._tunnelSocket.writeByte(portLSB);			
 			this._tunnelSocket.flush();			
 		}//establishHTTPTunnel
 		
+		/**
+		 * Invoked when the SOCKS5 tunnel has been established (connected and authenticated).
+		 */
 		private function onEstablishTunnel():void {			
 			var currentRequest:* = this._requestBuffer[0];
+			//URLRequest handles HTTP/HTTPS requests...
 			if (currentRequest is URLRequest) {
 				this.sendQueuedHTTPRequest();
 			}//if		
 		}//onEstablishHTTPTunnel
 		
+		/**
+		 * Sends the next queued HTTP/HTTPS request. Requests are queued whenever a connection has not yet been established or 
+		 * authentication is not yet complete.
+		 */
 		private function sendQueuedHTTPRequest():void {
 			var currentRequest:URLRequest = this._requestBuffer.shift() as URLRequest;
 			this._currentRequest = currentRequest;					
@@ -348,6 +475,13 @@ package org.torproject {
 			this._secureTunnelSocket.writeMultiByte(requestString, SOCKS5Model.charSetEncoding); //This is queued to send on connect
 		}//startTLSTunnel		
 		
+		/**
+		 * Tests whether or not the SOCKS5 authentication request was successful.
+		 * 
+		 * @param	respData The raw response data to analyze.
+		 * 
+		 * @return True if the response confirms that authentication was successful, false otherwise.
+		 */
 		private function authResponseOkay(respData:ByteArray):Boolean {
 			respData.position = 0;
 			var SOCKSVersion:int = respData.readByte();
@@ -361,6 +495,13 @@ package org.torproject {
 			return (true);
 		}//authResponseOkay
 		
+		/**
+		 * Tests whether or not the SOCKS5 response indicates that the tunnel has been established and is ready for communication.
+		 * 
+		 * @param	respData The raw SOCKS5 response message to analyze.
+		 * 
+		 * @return True if the SOCKS5 tunnel is ready to proxy requests and responses, false otherwise.
+		 */
 		private function tunnelResponseOkay(respData:ByteArray):Boolean {
 			respData.position = 0;
 			var currentRequest:* = this._requestBuffer[0];
@@ -378,6 +519,13 @@ package org.torproject {
 			return (false);
 		}//tunnelResponseOkay
 		
+		/**
+		 * Tests whether or not the SOCKS5 response data indicates that the entire HTTP/HTTPS request and response are complete.
+		 * 
+		 * @param	respData The raw SOCKS5 data to analyze.
+		 * 
+		 * @return True if the tunneled transaction appears to be complete, false otherwise.
+		 */
 		private function tunnelRequestComplete(respData:ByteArray):Boolean {			
 			var bodySize:int = -1;
 			if (this._HTTPHeadersReceived) {
@@ -405,6 +553,13 @@ package org.torproject {
 			return (false);
 		}//tunnelRequestComplete
 		
+		/**
+		 * Handles a HTTP redirect (301 or 302 response code).
+		 * 
+		 * @param	responseObj The HTTPResponse object to analyze for redirection information.
+		 * 
+		 * @return True if the supplied response is a redirect and the redirect was automatically handled, false otherwise.
+		 */
 		private function handleHTTPRedirect(responseObj:HTTPResponse):Boolean {
 			if (this._currentRequest.followRedirects) {				
 				if ((responseObj.statusCode == 301) || (responseObj.statusCode == 302)) {					
@@ -435,6 +590,13 @@ package org.torproject {
 			return (false);
 		}//handleHTTPRedirect			
 		
+		/**
+		 * Handles a raw, partial or complete HTTP response. This method also handles HTTPS responses after decryption using the same
+		 * mechanisms.
+		 * 
+		 * @param	rawData The raw HTTP data to analyze and process.		 
+		 * @param	secure Used with the SOCKS5TunnelEvent dispatched by this method to inform listeners whether or not the response is secure (HTTPS).
+		 */
 		private function handleHTTPResponse(rawData:ByteArray, secure:Boolean=false):void {
 			rawData.readBytes(this._responseBuffer, this._responseBuffer.length);			
 			if (!this._HTTPStatusReceived) {				
@@ -469,26 +631,33 @@ package org.torproject {
 			dataEvent.httpResponse = this._HTTPResponse;	
 			dataEvent.httpResponse.rawResponse = new ByteArray();
 			dataEvent.httpResponse.rawResponse.writeBytes(this._responseBuffer);	
-			if (!secure) {
-				this.disconnectSocket();
-			}//if
+			this.disconnectSocket();			
 			this.dispatchEvent(dataEvent);	
 			this._responseBuffer = new ByteArray();		
 			this._HTTPStatusReceived = false;
 			this._HTTPHeadersReceived = false;			
 		}//handleHTTPResponse		
 		
+		/**
+		 * Handles raw HTTP/HTTPS data from the SOCKS5 tunnel socket. Authentication, tunnel establishment, and message 
+		 * parsing branching (how responses are interpreted), are all handled automatically in this method.
+		 * 
+		 * @param	eventObj A standard ProgressEvent event (usually from an active Socket instance).
+		 */
 		private function onTunnelData(eventObj:ProgressEvent):void {
 			var rawData:ByteArray = new ByteArray();
 			var stringData:String = new String();
-			if (eventObj.target==this._tunnelSocket) {
+			if (eventObj.target is Socket) {
+				//Direct socket
 				this._tunnelSocket.readBytes(rawData);	
 			} else {
+				//TLS pseudo-socket
 				this._secureTunnelSocket.readBytes(rawData);
-			}
+			}//else
 			rawData.position = 0;
 			stringData = rawData.readMultiByte(rawData.length, SOCKS5Model.charSetEncoding);		
-			rawData.position = 0;			
+			rawData.position = 0;
+			//_authenticated and _tunneled flags are set for all outgoing connections...
 			if (!this._authenticated) {
 				if (this.authResponseOkay(rawData)) {
 					this._authenticated = true;
@@ -503,7 +672,8 @@ package org.torproject {
 					return;
 				}//if
 			}//if
-			if (this._currentRequest is URLRequest) {
+			//Since the tunnel can handle all types of connections, this is where we decide how responses are handled...
+			if (this._currentRequest is URLRequest) {				
 				if (eventObj.target is Socket) {					
 					this.handleHTTPResponse(rawData, false);
 				}//if

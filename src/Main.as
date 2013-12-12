@@ -1,6 +1,5 @@
 package  {
 		
-	import com.hurlant.crypto.hash.MD5;
 	import flash.display.MovieClip;	
 	import flash.utils.ByteArray;
 	import org.torproject.events.TorControlEvent;	
@@ -8,8 +7,6 @@ package  {
 	import demos.HTTPLoadDemo;
 	import demos.HTTPSLoadDemo;
 	import demos.CircuitsDemo;
-	import com.hurlant.crypto.hash.*;
-	import com.hurlant.util.*;
 	
 	/**
 	 * Sample class to demonstrate dynamically launching Tor network connectivity using the included
