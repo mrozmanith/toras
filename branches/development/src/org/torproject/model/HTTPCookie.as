@@ -43,11 +43,19 @@ package org.torproject.model  {
 		private var _isValid:Boolean = false;
 		private var _rawData:String;
 		
+		/**
+		 * Creates an instance of HTTPCookie by parsing the supplied cookie data into its components.
+		 * 
+		 * @param	rawCookieData An individual raw HTTP header cookie string to parse.
+		 */
 		public function HTTPCookie(rawCookieData:String) {
 			this._rawData = rawCookieData;
 			this.parseCookieData();
-		}
+		}//constructor
 		
+		/**
+		 * Parses the supplied raw cookie data into individual cookie components.
+		 */
 		private function parseCookieData():void {
 			this._isValid = false;
 			if (this._rawData == null) {
@@ -56,8 +64,7 @@ package org.torproject.model  {
 			var cookieSplit:Array = this._rawData.split(cookieDelimiter);
 			if (cookieSplit.length == 0) {
 				return;
-			}//if
-			//=PREF=ID=5b04ef66d94895bf:FF=0:TM=1385072305:LM=1385072305:S=1UkvWn2_v8HOyFrE; expires=Sat, 21-Nov-2015 22:18:25 GMT; path=/; domain=.google.de
+			}//if			
 			for (var count:uint = 0; count < cookieSplit.length; count++) {
 				try {
 					var currentCookieItem:String = cookieSplit[count] as String;				
@@ -97,38 +104,62 @@ package org.torproject.model  {
 			this._isValid = true;		
 		}
 		
+		/**
+		 * The cookie name as parsed from the supplied raw HTTP cookie header data.
+		 */
 		public function get name():String {
 			return (this._name);
-		}
+		}//get name
 		
+		/**
+		 * The cookie value as parsed from the supplied raw HTTP cookie header data.
+		 */
 		public function get value():String {
 			return (this._value);
-		}
+		}//get value
 		
+		/**
+		 * The cookie expiry date as parsed from the supplied raw HTTP cookie header data.
+		 */
 		public function get expires():String {
 			return (this._expires);
-		}
+		}//get expires
 		
+		/**
+		 * The cookie domain information as parsed from the supplied raw HTTP cookie header data.
+		 */
 		public function get domain():String {
 			return (this._domain);
-		}
+		}//get domain
 		
+		/**
+		 * The cookie path as parsed from the supplied raw HTTP cookie header data.
+		 */
 		public function get path():String {
 			return (this._path);
-		}
+		}//get path
 		
+		/**
+		 * True if the supplied HTTP cookie information is flagged as secure (HTTPS), false otherwise.
+		 */
 		public function get secure():Boolean {
 			return (this._secure);
-		}
+		}//get secure
 		
+		/**
+		 * True if the supplied HTTP cookie information is flagged as HTTP-only (non-HTTPS), false otherwise.
+		 */
 		public function get httpOnly():Boolean {
 			return (this._httpOnly);
-		}
+		}//get httpOnly
 		
+		/**
+		 * True if the supplied HTTP cookie information appears to be valid and could be parsed correctly, false otherwise.
+		 */
 		public function get isValid():Boolean {
 			return (this._isValid);
-		}
+		}//get isValid
 		
-	}
+	}//HTTPCookie class
 
-}
+}//package

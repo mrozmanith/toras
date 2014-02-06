@@ -52,7 +52,7 @@ package demos {
 			trace ("Circuit ID: " + circuitObj.ID);
 			trace ("Circuit status: " + circuitObj.status);
 			trace ("Circuit purpose: " + circuitObj.purpose);
-			trace ("Circuit time created: " + circuitObj.timeCreated);
+			trace ("Circuit info time stamp: " + circuitObj.timeStamp);
 			trace ("Circuit flags: " + circuitObj.flags);
 			trace ("Circuit hops: ");
 			if (circuitObj.hops!=null) {

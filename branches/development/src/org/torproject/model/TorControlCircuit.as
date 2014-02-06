@@ -42,7 +42,7 @@ package org.torproject.model {
 		private var _circuitPath:String = null;		
 		private var _circuitHops:Vector.<TorControlCircuitHop> = null;
 		private var _circuitFlags:Vector.<String> = null;
-		private var _circuitTimeCreated:String = null;
+		private var _circuitTimeStamp:String = null;
 		private var _circuitPurpose:String = null;
 		private var _circuitHSState:String = null;
 		private var _circuitHSAddress:String = null;
@@ -65,52 +65,85 @@ package org.torproject.model {
 		}//get isValid
 		
 		/**
-		 * Gets the raw, unparsed circuit data supplied to the TorControlCircuit instance.
+		 * The raw, unparsed circuit data supplied to the TorControlCircuit instance.
 		 */
 		public function get rawCircuitData():String {
 			return (this._rawCircuitData);
 		}//get rawCircuitData
 		
+		/**
+		 * Requires documentation.
+		 */
 		public function get remoteReason():String {
 			return (this._circuitRemoteReason);
 		}//get remoteReason
 		
+		/**
+		 * Requires documentation.
+		 */
 		public function get HSAddress():String {
 			return (this._circuitHSAddress);
 		}//get HSAddress
 		
+		/**
+		 * Requires documentation.
+		 */
 		public function get HSState():String {
 			return (this._circuitHSState);
 		}//get HSState
 		
+		/**
+		 * Requires documentation.
+		 */
 		public function get reason():String {
 			return (this._circuitReason);
 		}//get reason
 		
+		/**
+		 * The purpose for which this circuit is intended. (Needs extra documentation)
+		 */
 		public function get purpose():String {
 			return (this._circuitPurpose);
 		}//get purpose
 		
-		public function get timeCreated():String {
-			return (this._circuitTimeCreated);
-		}//get timeCreated
+		/**
+		 * The timestamp of the circuit state.
+		 */
+		public function get timeStamp():String {
+			return (this._circuitTimeStamp);
+		}//get timeStamp
 		
+		/**
+		 * The flags associated with the circuit. (Needs extra documentation)
+		 */
 		public function get flags():Vector.<String> {
 			return (this._circuitFlags);
 		}//get flags
 		
+		/**
+		 * Numerically indexed vector array of TorControlCircuitHop instances, each of which represents a hop in the Tor circuit (in order).
+		 */
 		public function get hops():Vector.<TorControlCircuitHop> {
 			return (this._circuitHops);
 		}//get hops
 		
+		/**
+		 * The raw circuit path, typically parsed into individual pieces in the hops vector array.
+		 */
 		public function get path():String {
 			return (this._circuitPath);
 		}//get path
 		
+		/**
+		 * The status of the current circuit snapshot.
+		 */
 		public function get status():String {
 			return (this._circuitStatus);
 		}//get status
 		
+		/**
+		 * The ID of the current circuit (this identifier can be used to control the circuit).
+		 */
 		public function get ID():int {
 			return (this._circuitID);
 		}//get ID
@@ -137,7 +170,7 @@ package org.torproject.model {
 							this._circuitPurpose = tailElementValue;
 							break;
 						case "TIME_CREATED" :
-							this._circuitTimeCreated = tailElementValue;
+							this._circuitTimeStamp = tailElementValue;
 							break;
 						case "REASON" :
 							this._circuitReason = tailElementValue;
