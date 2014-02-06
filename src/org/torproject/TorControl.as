@@ -191,8 +191,7 @@ HashedControlPassword %control_passhash%
 		 * 
 		 * @param	... args Used internally to apply a startup delay. Set to true to bypass any startup delay (connect immediately).		 
 		 */
-		private function onTorControlReady(... args):void {
-			trace ("onTorControlReady...");
+		private function onTorControlReady(... args):void {			
 			if (_socket == null) {
 				if ((this._connectDelay > 0) && (args[0]!=true)){
 					setTimeout(this.connect, this._connectDelay, true);					
@@ -426,8 +425,7 @@ HashedControlPassword %control_passhash%
 		 * 
 		 * @param	eventObj An IOErrorEvent object.
 		 */
-		private function onConnectError(eventObj:IOErrorEvent):void {	
-			trace ("Failed to connect: "+eventObj.toString());
+		private function onConnectError(eventObj:IOErrorEvent):void {				
 			_connected = false;
 			var errorEventObj:TorControlEvent = new TorControlEvent(TorControlEvent.ONCONNECTERROR);
 			errorEventObj.error = new TorASError(eventObj.toString());
