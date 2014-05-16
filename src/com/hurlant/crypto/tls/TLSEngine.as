@@ -702,7 +702,7 @@ package com.hurlant.crypto.tls {
 		private function parseAlert(p:ByteArray):void {
 			//throw new Error("Alert not implemented.");
 			// 7.2
-			trace("GOT ALERT! type="+p[1]);
+			trace("GOT PROTOCOL ALERT! type="+p[1]);
 			close();
 		}
 		private function parseChangeCipherSpec(p:ByteArray):void {
@@ -714,7 +714,7 @@ package com.hurlant.crypto.tls {
 			_pendingReadState = null;
 			// 7.1
 		}
-		private function parseApplicationData(p:ByteArray):void {
+		private function parseApplicationData(p:ByteArray):void {			
 			dispatchEvent(new TLSEvent(TLSEvent.DATA, p));
 		}
 		
