@@ -146,10 +146,10 @@ package org.torproject.model {
 		 * 
 		 * @param	rawResponseData The raw binary response data to attempt to parse.
 		 * 
-		 * @return True if the response headers were successfully parsed (subsequently available through the headers property), false
+		 * @return True if the response body was successfully parsed (subsequently available through the body property), false
 		 * otherwise.
 		 */
-		public function parseResponseBody(rawResponseData:ByteArray):Boolean {
+		public function parseResponseBody(rawResponseData:ByteArray):Boolean {			
 			if (!this.bodySectionComplete(rawResponseData)) {
 				return (false);
 			}//if
@@ -159,11 +159,22 @@ package org.torproject.model {
 				this._body = rawResponseData.readMultiByte(rawResponseData.length, this.charSet);
 				var headerEndPos:int = this._body.indexOf(doubleCRLF) + 4;
 				var bodyEndPos:int = this._body.lastIndexOf(doubleCRLF);
-				var bodyLength:int = bodyEndPos - headerEndPos;				
-				this._body = this._body.substring(headerEndPos, bodyEndPos);
-				if (this.responseIsChunked) {
-					this._body = this.parseChunkedBody(this._body);
+				var bodyLength:int = bodyEndPos - headerEndPos;	
+				if (this.headerSectionComplete(this._rawResponse)) {
+					var contentLengthHeader:int = -1;
+					try { 						
+						contentLengthHeader = int(this.getHeader("Content-Length", false).value);
+					} catch (err:*) {
+						contentLengthHeader = -1;
+					}//catch
+					if (contentLengthHeader > 0) {
+						bodyEndPos = contentLengthHeader + headerEndPos;
+					}//if				
 				}//if
+				this._body = this._body.substring(headerEndPos, bodyEndPos);				
+				if (this.responseIsChunked) {					
+					this._body = this.parseChunkedBody(this._body);
+				}//if				
 				return (true);
 			} catch (err:*) {
 				return (false);
@@ -171,9 +182,13 @@ package org.torproject.model {
 			return (false);
 		}//parseResponseBody
 		
+		
+		/**
+		 * True if the HTTP response body is marked as being chunked, false otherwise.
+		 */
 		public function get responseIsChunked():Boolean {
 			try {
-				var header:HTTPResponseHeader = this.getHeader("Transfer-Encoding");
+				var header:HTTPResponseHeader = this.getHeader("Transfer-Encoding", false);
 				if (header == null) {
 					return (false);
 				}//if
@@ -186,7 +201,15 @@ package org.torproject.model {
 			return (false);
 		}//get responseIsChunked
 					
-		public function getHeader(headerName:String):HTTPResponseHeader {
+		/**
+		 * Returns a parsed HTTP response header, as a HTTPResponseHeader instance.
+		 * 
+		 * @param	headerName The header name (for example, "Content-Length"), to attempt to retrieve.
+		 * @param	caseSensitive True if the headerName parameter is to be matched exactly (case-sensitive), or not.
+		 * 
+		 * @return A HTTPResponseHeader instance with the matching header, or null of no such header can be found.
+		 */
+		public function getHeader(headerName:String, caseSensitive:Boolean=true):HTTPResponseHeader {
 			if (this._headers == null) {
 				return(null);
 			}//if
@@ -195,9 +218,15 @@ package org.torproject.model {
 			}//if
 			for (var count:uint = 0; count < this._headers.length; count++) {
 				var currentHeader:HTTPResponseHeader = this._headers[count];
-				if (currentHeader.name == headerName) {
-					return(currentHeader);
-				}//if
+				if (caseSensitive) {
+					if (currentHeader.name == headerName) {
+						return(currentHeader);
+					}//if
+				} else {
+					if (currentHeader.name.toLowerCase() == headerName.toLowerCase()) {
+						return(currentHeader);
+					}//if
+				}//else
 			}//for
 			return (null);
 		}//getHeader
@@ -210,7 +239,7 @@ package org.torproject.model {
 			return (this._rawResponse);
 		}
 		
-		private function parseChunkedBody(chunkedBody:String):String {		
+		private function parseChunkedBody(chunkedBody:String):String {			
 			var assembledBody:String = new String();
 			var workingCopy:String = new String(chunkedBody);
 			var chunkSection:Object = this.getChunkSection(workingCopy);
@@ -220,7 +249,7 @@ package org.torproject.model {
 				chunkSection = this.getChunkSection(workingCopy);				
 			}//while		
 			return (assembledBody);
-		}
+		}//parseChunkedBody
 		
 		private function getChunkSection(chunkedBody:String):Object {
 			try {
